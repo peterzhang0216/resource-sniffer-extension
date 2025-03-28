@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Resource Sniffer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Resource Sniffer</h1>
+    
+    <div class="controls">
+      <div class="filter-controls">
+        <label>
+          <input type="checkbox" id="filter-images" checked> 
+          图片
+        </label>
+        <label>
+          <input type="checkbox" id="filter-videos" checked> 
+          视频
+        </label>
+      </div>
+      
+      <div class="sort-controls">
+        <label>排序: 
+          <select id="sort-by">
+            <option value="size-desc">大小 (大到小)</option>
+            <option value="size-asc">大小 (小到大)</option>
+            <option value="time-desc">时间 (新到旧)</option>
+            <option value="time-asc">时间 (旧到新)</option>
+          </select>
+        </label>
+      </div>
+      
+      <button id="refresh-btn">刷新</button>
+    </div>
+    
+    <div class="resources-container">
+      <div class="resources-header">
+        <div class="select-all">
+          <label>
+            <input type="checkbox" id="select-all"> 
+            全选
+          </label>
+        </div>
+        <div class="download-selected">
+          <button id="download-selected-btn" disabled>下载选中项</button>
+        </div>
+      </div>
+      
+      <div id="resources-list">
+        <div class="loading">正在加载资源...</div>
+      </div>
+      
+      <div id="no-resources" style="display: none;">
+        <p>未检测到资源。请刷新页面或浏览其他内容。</p>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <div class="stats">
+        已检测到 <span id="resource-count">0</span> 个资源
+      </div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
