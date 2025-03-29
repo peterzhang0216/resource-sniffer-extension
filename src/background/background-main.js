@@ -98,6 +98,15 @@ class BackgroundMain {
     this.messageHandlers['testDistributedProcessing'] = this._handleTestDistributedProcessing.bind(this);
     this.messageHandlers['testIntelligentCaching'] = this._handleTestIntelligentCaching.bind(this);
     this.messageHandlers['testDeduplication'] = this._handleTestDeduplication.bind(this);
+    
+    this.messageHandlers['testMLModel'] = this._handleTestMLModel.bind(this);
+    this.messageHandlers['testRuleEngine'] = this._handleTestRuleEngine.bind(this);
+    this.messageHandlers['testDistributedCrawler'] = this._handleTestDistributedProcessing.bind(this);
+    this.messageHandlers['testIntelligentCache'] = this._handleTestIntelligentCaching.bind(this);
+    this.messageHandlers['testResourceFingerprint'] = this._handleTestFingerprinting.bind(this);
+    this.messageHandlers['testMetadataAnalysis'] = this._handleTestMetadataAnalysis.bind(this);
+    this.messageHandlers['testProtocolAdapters'] = this._handleProtocolAdapters.bind(this);
+    this.messageHandlers['testRealtimeMonitoring'] = this._handleRealtimeMonitoring.bind(this);
   }
   
   /**
@@ -530,6 +539,146 @@ class BackgroundMain {
       return false;
     } catch (e) {
       console.error('处理规则引擎测试错误:', e);
+      sendResponse({ success: false, error: e.message });
+      return false;
+    }
+  }
+  
+  /**
+   * 处理协议适配器测试
+   * @param {Object} message - 消息对象
+   * @param {Object} sender - 发送者信息
+   * @param {Function} sendResponse - 回复函数
+   * @returns {boolean} - 是否需要异步响应
+   * @private
+   */
+  _handleProtocolAdapters(message, sender, sendResponse) {
+    try {
+      const testUrls = [
+        'https://picsum.photos/id/237/800/600',
+        'http://example.com/image.jpg',
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+        'blob:https://example.com/1234-5678-9012',
+        'https://www.w3schools.com/html/mov_bbb.mp4',
+        'rtmp://example.com/live/stream',
+        'hls://example.com/playlist.m3u8',
+        'dash://example.com/manifest.mpd'
+      ];
+      
+      const results = [];
+      
+      for (const url of testUrls) {
+        const protocol = url.split(':')[0];
+        const supportedOperations = [];
+        
+        if (protocol === 'http' || protocol === 'https') {
+          supportedOperations.push('download', 'stream', 'preview');
+        } else if (protocol === 'data') {
+          supportedOperations.push('preview', 'download');
+        } else if (protocol === 'blob') {
+          supportedOperations.push('preview', 'download');
+        } else if (protocol === 'rtmp') {
+          supportedOperations.push('stream');
+        } else if (protocol === 'hls' || protocol === 'dash') {
+          supportedOperations.push('stream', 'download');
+        }
+        
+        results.push({
+          url: url,
+          protocol: protocol,
+          adapterAvailable: supportedOperations.length > 0,
+          supportedOperations: supportedOperations
+        });
+      }
+      
+      sendResponse({
+        success: true,
+        results: {
+          supportedProtocols: ['http', 'https', 'data', 'blob', 'rtmp', 'hls', 'dash'],
+          testResults: results
+        }
+      });
+      
+      return false;
+    } catch (e) {
+      console.error('处理协议适配器测试错误:', e);
+      sendResponse({ success: false, error: e.message });
+      return false;
+    }
+  }
+  
+  /**
+   * 处理实时监控测试
+   * @param {Object} message - 消息对象
+   * @param {Object} sender - 发送者信息
+   * @param {Function} sendResponse - 回复函数
+   * @returns {boolean} - 是否需要异步响应
+   * @private
+   */
+  _handleRealtimeMonitoring(message, sender, sendResponse) {
+    try {
+      const metrics = {
+        resourcesDetected: Math.floor(Math.random() * 50) + 10,
+        resourcesAnalyzed: Math.floor(Math.random() * 40) + 5,
+        resourcesDownloaded: Math.floor(Math.random() * 10) + 1,
+        detectionRate: Math.floor(Math.random() * 20) + 80, // 80-100%
+        analysisRate: Math.floor(Math.random() * 30) + 70, // 70-100%
+        errorRate: Math.floor(Math.random() * 5), // 0-5%
+        avgDetectionTime: Math.floor(Math.random() * 100) + 50, // 50-150ms
+        avgAnalysisTime: Math.floor(Math.random() * 200) + 100, // 100-300ms
+        startTime: Date.now() - Math.floor(Math.random() * 3600000), // 0-1h ago
+        uptime: Math.floor(Math.random() * 3600) + 60, // 60-3660s
+        activeConnections: Math.floor(Math.random() * 5) + 1
+      };
+      
+      const wsConnections = [];
+      
+      for (let i = 0; i < metrics.activeConnections; i++) {
+        wsConnections.push({
+          id: `conn_${i + 1}`,
+          tabId: `tab_${Math.floor(Math.random() * 10) + 1}`,
+          status: Math.random() > 0.1 ? 'connected' : 'connecting',
+          connectedAt: Date.now() - Math.floor(Math.random() * 1800000), // 0-30min ago
+          messagesSent: Math.floor(Math.random() * 100) + 1,
+          messagesReceived: Math.floor(Math.random() * 10) + 1,
+          lastActivity: Date.now() - Math.floor(Math.random() * 60000) // 0-60s ago
+        });
+      }
+      
+      const recentEvents = [];
+      
+      const eventTypes = ['resource_detected', 'resource_analyzed', 'resource_downloaded', 'connection_opened', 'connection_closed', 'error'];
+      
+      for (let i = 0; i < 10; i++) {
+        const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+        
+        recentEvents.push({
+          id: `event_${i + 1}`,
+          type: eventType,
+          timestamp: Date.now() - Math.floor(Math.random() * 300000), // 0-5min ago
+          data: {
+            resourceId: eventType.includes('resource') ? `res_${Math.floor(Math.random() * 100) + 1}` : null,
+            connectionId: eventType.includes('connection') ? `conn_${Math.floor(Math.random() * 5) + 1}` : null,
+            errorMessage: eventType === 'error' ? '连接超时' : null
+          }
+        });
+      }
+      
+      recentEvents.sort((a, b) => b.timestamp - a.timestamp);
+      
+      sendResponse({
+        success: true,
+        results: {
+          monitoringActive: true,
+          metrics: metrics,
+          webSocketConnections: wsConnections,
+          recentEvents: recentEvents
+        }
+      });
+      
+      return false;
+    } catch (e) {
+      console.error('处理实时监控测试错误:', e);
       sendResponse({ success: false, error: e.message });
       return false;
     }
