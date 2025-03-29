@@ -27,6 +27,10 @@
               <input type="checkbox" id="filter-videos" checked> 
               视频
             </label>
+            <label>
+              <input type="checkbox" id="filter-audio" checked> 
+              音频
+            </label>
           </div>
           
           <div class="quality-filter">
@@ -40,6 +44,21 @@
             </label>
           </div>
           
+          <div class="detection-filter">
+            <label>检测方法: 
+              <select id="filter-detection-method">
+                <option value="all">全部</option>
+                <option value="dom-standard">标准DOM</option>
+                <option value="css-background">CSS背景</option>
+                <option value="custom-attribute">自定义属性</option>
+                <option value="network-request">网络请求</option>
+                <option value="streaming">流媒体</option>
+                <option value="shadow-dom">影子DOM</option>
+                <option value="iframe">嵌入框架</option>
+              </select>
+            </label>
+          </div>
+          
           <div class="sort-controls">
             <label>排序: 
               <select id="sort-by">
@@ -47,11 +66,16 @@
                 <option value="size-asc">大小 (小到大)</option>
                 <option value="time-desc">时间 (新到旧)</option>
                 <option value="time-asc">时间 (旧到新)</option>
+                <option value="quality-desc">质量 (高到低)</option>
+                <option value="quality-asc">质量 (低到高)</option>
               </select>
             </label>
           </div>
           
-          <button id="refresh-btn">刷新</button>
+          <div class="action-buttons">
+            <button id="refresh-btn">刷新</button>
+            <button id="clear-cache-btn" class="secondary-btn">清除缓存</button>
+          </div>
         </div>
         
         <div class="download-settings">
@@ -111,37 +135,92 @@
           <div class="setting-item">
             <label>
               并发下载数量:
-              <input type="number" id="max-concurrent-downloads" min="1" max="5" value="2">
+              <input type="number" id="max-concurrent-downloads" min="1" max="10" value="2">
             </label>
+            <span class="setting-description">同时进行的下载任务数量</span>
           </div>
           <div class="setting-item">
             <label>
               下载速度限制 (KB/s, 0表示不限制):
               <input type="number" id="download-speed-limit" min="0" value="0">
             </label>
+            <span class="setting-description">限制下载速度以减轻网络负担</span>
           </div>
           <div class="setting-item">
             <label>
               <input type="checkbox" id="categorize-by-website" checked>
               按网站分类存储
             </label>
+            <span class="setting-description">在下载路径中添加网站名称文件夹</span>
           </div>
           <div class="setting-item">
             <label>
               <input type="checkbox" id="categorize-by-type" checked>
               按资源类型分类存储
             </label>
+            <span class="setting-description">在下载路径中添加资源类型文件夹</span>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input type="checkbox" id="add-quality-to-filename" checked>
+              在文件名中添加质量标记
+            </label>
+            <span class="setting-description">在文件名中添加HD/SD/LD等质量标记</span>
           </div>
           <div class="setting-item">
             <label>
               默认下载路径:
               <input type="text" id="default-download-path" value="downloads/resource-sniffer">
             </label>
+            <span class="setting-description">所有下载的默认保存位置</span>
           </div>
         </div>
+        
+        <div class="settings-section">
+          <h3>检测设置</h3>
+          <div class="setting-item">
+            <label>
+              <input type="checkbox" id="enable-deep-scanning" checked>
+              启用深度扫描
+            </label>
+            <span class="setting-description">扫描页面中的隐藏资源和嵌套内容</span>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input type="checkbox" id="enable-streaming-detection" checked>
+              启用流媒体检测
+            </label>
+            <span class="setting-description">检测HLS和DASH等流媒体资源</span>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input type="checkbox" id="enable-shadow-dom-scanning" checked>
+              启用影子DOM扫描
+            </label>
+            <span class="setting-description">扫描Shadow DOM中的资源</span>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input type="checkbox" id="enable-iframe-scanning" checked>
+              启用iframe扫描
+            </label>
+            <span class="setting-description">扫描嵌入框架中的资源</span>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <h3>快捷键设置</h3>
+          <div class="setting-item">
+            <div class="shortcut-info">
+              <span class="shortcut-key">Ctrl+Shift+S</span>
+              <span class="shortcut-description">下载所有检测到的资源</span>
+            </div>
+          </div>
+        </div>
+        
         <div class="settings-actions">
-          <button id="save-settings-btn">保存设置</button>
-          <button id="reset-settings-btn">重置设置</button>
+          <button id="save-settings-btn" class="primary-btn">保存设置</button>
+          <button id="reset-settings-btn" class="secondary-btn">重置设置</button>
         </div>
       </div>
     </div>
@@ -155,14 +234,22 @@
           <div id="preview-filename"></div>
           <div id="preview-type"></div>
           <div id="preview-size"></div>
+          <div id="preview-quality"></div>
+          <div id="preview-detection-method"></div>
         </div>
-        <button id="preview-download-btn">下载</button>
+        <div class="preview-actions">
+          <button id="preview-download-btn" class="primary-btn">下载</button>
+          <button id="preview-copy-url-btn" class="secondary-btn">复制URL</button>
+        </div>
       </div>
     </div>
     
     <div class="footer">
       <div class="stats">
         已检测到 <span id="resource-count">0</span> 个资源
+      </div>
+      <div id="resource-stats-container" class="resource-stats">
+        <!-- 资源统计信息将在这里动态生成 -->
       </div>
     </div>
   </div>
@@ -171,12 +258,32 @@
     <div class="modal-content">
       <span class="close-modal">&times;</span>
       <h2>下载进度</h2>
+      <div class="download-stats">
+        <div class="download-stat-item">
+          <span class="stat-label">活动下载:</span>
+          <span id="active-download-count" class="stat-value">0</span>
+        </div>
+        <div class="download-stat-item">
+          <span class="stat-label">队列中:</span>
+          <span id="queue-count" class="stat-value">0</span>
+        </div>
+        <div class="download-stat-item">
+          <span class="stat-label">已完成:</span>
+          <span id="completed-count" class="stat-value">0</span>
+        </div>
+      </div>
       <div id="active-downloads-container"></div>
       <div class="download-progress-footer">
-        <div id="download-queue-info">队列中: <span id="queue-count">0</span></div>
+        <button id="pause-all-btn" class="secondary-btn">暂停全部</button>
+        <button id="resume-all-btn" class="secondary-btn">恢复全部</button>
+        <button id="clear-completed-btn" class="secondary-btn">清除已完成</button>
         <button id="close-progress-modal" class="secondary-btn">关闭</button>
       </div>
     </div>
+  </div>
+  
+  <div id="notification-container" class="notification-container">
+    <!-- 通知将在这里动态生成 -->
   </div>
   
   <script src="popup.js"></script>
