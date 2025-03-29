@@ -1,0 +1,17 @@
+{
+  "name": "resource-sniffer-tests",
+  "version": "1.0.0",
+  "description": "Unit tests for Resource Sniffer Chrome Extension",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
+    "babel-jest": "^27.0.6",
+    "jest": "^27.0.6",
+    "jest-environment-jsdom": "^27.0.6"
+  }
+}

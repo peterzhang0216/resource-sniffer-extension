@@ -1,0 +1,7 @@
+# 日志功能单元测试进度
+
+- [x] logging-service.js - 日志服务
+- [x] app-state-logger.js - 应用状态日志记录器
+- [x] download-logger.js - 下载日志记录器
+- [x] log-viewer.js - 日志查看器组件
+- [x] log-tab.js - 日志标签页组件

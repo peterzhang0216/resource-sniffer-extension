@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Resource Sniffer",
-  "version": "2.0.0",
-  "description": "A Chrome extension to detect, analyze, and download images and videos from web pages with advanced logging capabilities",
+  "version": "1.0",
+  "description": "A Chrome extension to detect and download images and videos from web pages",
   "permissions": [
     "webRequest",
     "downloads",
@@ -11,11 +11,7 @@
     "activeTab",
     "contextMenus",
     "webNavigation",
-    "unlimitedStorage",
-    "system.cpu",
-    "system.memory",
-    "alarms",
-    "notifications"
+    "unlimitedStorage"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -37,20 +33,9 @@
       "matches": ["<all_urls>"],
       "js": [
         "src/config/constants.js",
-        "src/config/settings.js",
         "src/utils/url-utils.js",
         "src/utils/file-utils.js",
         "src/utils/resource-utils.js",
-        "src/utils/compression-utils.js",
-        "src/services/indexeddb-service.js",
-        "src/services/logging-service.js",
-        "src/services/app-state-logger.js",
-        "src/services/download-logger.js",
-        "src/services/log-analyzer-service.js",
-        "src/services/remote-logging-service.js",
-        "src/services/detection-service.js",
-        "src/services/fingerprint-service.js",
-        "src/services/metadata-service.js",
         "src/content/detectors/dom-detector.js",
         "src/content/detectors/css-detector.js",
         "src/content/detectors/shadow-detector.js",
@@ -58,23 +43,12 @@
         "src/content/detectors/streaming-detector.js",
         "src/content/message-handler.js",
         "src/content/content-main.js"
-      ],
-      "css": [
-        "styles/log-viewer.css",
-        "styles/log-tab.css"
       ]
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": [
-        "src/workers/*.js", 
-        "src/workers/distributed/*.js",
-        "src/services/*.js",
-        "src/components/*.js",
-        "src/libs/*.js",
-        "styles/*.css"
-      ],
+      "resources": ["src/workers/*.js"],
       "matches": ["<all_urls>"]
     }
   ],

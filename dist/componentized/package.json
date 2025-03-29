@@ -1,0 +1,7 @@
+{
+  "name": "resource-sniffer",
+  "version": "1.0.0",
+  "description": "A Chrome extension to detect and download images and videos from web pages",
+  "author": "Resource Sniffer Team",
+  "license": "MIT"
+}

@@ -1,7 +1,7 @@
 /**
  * @file logging-service.js
- * @description 本地日志服务，记录应用状态和下载状态
- * @version 1.0.0
+ * @description 本地日志服务，记录应用状态和下载状态，支持压缩存储和远程日志
+ * @version 1.1.0
  * @license MIT
  * @copyright © 2025 Resource Sniffer
  */
@@ -30,7 +30,8 @@ const LogCategory = {
   RESOURCE: 'resource',
   NETWORK: 'network',
   WORKER: 'worker',
-  UI: 'ui'
+  UI: 'ui',
+  ANALYSIS: 'analysis'
 };
 
 /**
@@ -49,8 +50,46 @@ class LoggingService {
     this.enabledCategories = Object.values(LogCategory);
     this.listeners = [];
     this.storageKey = 'resource_sniffer_logs';
+    this.useIndexedDB = true;
+    this.compressionThreshold = 200; // 日志条数达到此阈值时进行压缩
+    this.useRemoteLogging = false;
+    this.autoAnalyze = false;
+    this.analyzeInterval = 60; // 分钟
+    this.maxStorageAge = 30; // 天
+    this.indexedDBService = null;
+    this.remoteLoggingService = null;
+    this.logAnalyzerService = null;
     
     this._loadSettings();
+    this._initServices();
+  }
+  
+  /**
+   * 初始化相关服务
+   * @private
+   */
+  async _initServices() {
+    try {
+      if (this.useIndexedDB) {
+        this.indexedDBService = (await import('./indexeddb-service.js')).default;
+        console.log('IndexedDB服务初始化成功');
+      }
+      
+      if (this.useRemoteLogging) {
+        this.remoteLoggingService = (await import('./remote-logging-service.js')).default;
+        console.log('远程日志服务初始化成功');
+      }
+      
+      if (this.autoAnalyze) {
+        this.logAnalyzerService = (await import('./log-analyzer-service.js')).default;
+        this.logAnalyzerService.startAutoAnalysis(this.analyzeInterval);
+        console.log('日志分析服务初始化成功');
+      }
+      
+      this._scheduleLogCleanup();
+    } catch (error) {
+      console.error('初始化日志服务失败:', error);
+    }
   }
   
   /**
@@ -65,6 +104,12 @@ class LoggingService {
         this.minLevel = settings.minLevel !== undefined ? settings.minLevel : LogLevel.INFO;
         this.enabledCategories = settings.enabledCategories || Object.values(LogCategory);
         this.maxLogs = settings.maxLogs || 1000;
+        this.useIndexedDB = settings.useIndexedDB !== undefined ? settings.useIndexedDB : true;
+        this.compressionThreshold = settings.compressionThreshold || 200;
+        this.useRemoteLogging = settings.useRemoteLogging !== undefined ? settings.useRemoteLogging : false;
+        this.autoAnalyze = settings.autoAnalyze !== undefined ? settings.autoAnalyze : false;
+        this.analyzeInterval = settings.analyzeInterval || 60;
+        this.maxStorageAge = settings.maxStorageAge || 30;
       }
       
       const savedLogs = await storageService.get(this.storageKey);
@@ -77,6 +122,25 @@ class LoggingService {
   }
   
   /**
+   * 安排日志清理任务
+   * @private
+   */
+  _scheduleLogCleanup() {
+    setInterval(async () => {
+      if (this.useIndexedDB && this.indexedDBService) {
+        try {
+          const deletedCount = await this.indexedDBService.clearOldLogs(this.maxStorageAge);
+          if (deletedCount > 0) {
+            console.log(`已清理${deletedCount}条过期日志`);
+          }
+        } catch (error) {
+          console.error('清理过期日志失败:', error);
+        }
+      }
+    }, 24 * 60 * 60 * 1000); // 24小时
+  }
+  
+  /**
    * 保存日志设置
    * @private
    */
@@ -86,7 +150,13 @@ class LoggingService {
         isEnabled: this.isEnabled,
         minLevel: this.minLevel,
         enabledCategories: this.enabledCategories,
-        maxLogs: this.maxLogs
+        maxLogs: this.maxLogs,
+        useIndexedDB: this.useIndexedDB,
+        compressionThreshold: this.compressionThreshold,
+        useRemoteLogging: this.useRemoteLogging,
+        autoAnalyze: this.autoAnalyze,
+        analyzeInterval: this.analyzeInterval,
+        maxStorageAge: this.maxStorageAge
       };
       
       await storageService.set('logging_settings', settings);
@@ -104,8 +174,31 @@ class LoggingService {
     
     try {
       await storageService.set(this.storageKey, this.logs.slice(-this.maxLogs));
+      
+      if (this.useIndexedDB && this.logs.length >= this.compressionThreshold) {
+        const logsToCompress = [...this.logs];
+        await this._compressAndStoreLogs(logsToCompress);
+      }
     } catch (error) {
       console.error('保存日志失败:', error);
+    }
+  }
+  
+  /**
+   * 压缩并存储日志到IndexedDB
+   * @private
+   * @param {Array} logs - 要压缩的日志
+   */
+  async _compressAndStoreLogs(logs) {
+    try {
+      if (!this.indexedDBService) {
+        this.indexedDBService = (await import('./indexeddb-service.js')).default;
+      }
+      
+      await this.indexedDBService.saveLogs(logs);
+      console.log(`已将${logs.length}条日志压缩存储到IndexedDB`);
+    } catch (error) {
+      console.error('压缩存储日志失败:', error);
     }
   }
   
@@ -141,7 +234,32 @@ class LoggingService {
     
     this._saveLogs();
     
+    this._sendToRemoteLogging(logEntry);
+    
+    if (this.autoAnalyze && this.logAnalyzerService) {
+      this.logAnalyzerService.addLogForAnalysis(logEntry);
+    }
+    
     return logEntry;
+  }
+  
+  /**
+   * 发送日志到远程日志服务
+   * @param {Object} logEntry - 日志条目
+   * @private
+   */
+  async _sendToRemoteLogging(logEntry) {
+    if (this.useRemoteLogging) {
+      try {
+        if (!this.remoteLoggingService) {
+          this.remoteLoggingService = (await import('./remote-logging-service.js')).default;
+        }
+        
+        this.remoteLoggingService.sendLog(logEntry);
+      } catch (error) {
+        console.error('发送远程日志失败:', error);
+      }
+    }
   }
   
   /**
@@ -240,6 +358,36 @@ class LoggingService {
     }
     
     return filteredLogs;
+  }
+  
+  /**
+   * 获取历史日志（包括存储在IndexedDB中的压缩日志）
+   * @param {Object} [filters] - 过滤条件
+   * @returns {Promise<Array>} - 日志列表
+   */
+  async getHistoryLogs(filters = {}) {
+    try {
+      if (!this.useIndexedDB) {
+        return this.getLogs(filters);
+      }
+      
+      if (!this.indexedDBService) {
+        this.indexedDBService = (await import('./indexeddb-service.js')).default;
+      }
+      
+      const dbLogs = await this.indexedDBService.getLogs(filters);
+      
+      const memoryLogs = this.getLogs(filters);
+      const combinedLogs = [...memoryLogs, ...dbLogs];
+      
+      const uniqueLogs = Array.from(new Map(combinedLogs.map(log => [log.id, log])).values());
+      uniqueLogs.sort((a, b) => b.timestamp - a.timestamp);
+      
+      return filters.limit ? uniqueLogs.slice(0, filters.limit) : uniqueLogs;
+    } catch (error) {
+      console.error('获取历史日志失败:', error);
+      return this.getLogs(filters);
+    }
   }
   
   /**
