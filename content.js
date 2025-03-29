@@ -18,6 +18,12 @@ function extractVideoResources() {
   const videos = Array.from(document.querySelectorAll('video, source'));
   return videos.map(video => {
     const url = video.src || video.currentSrc;
+    
+    let thumbnailUrl = '';
+    if (video.tagName === 'VIDEO' && video.poster) {
+      thumbnailUrl = video.poster;
+    }
+    
     return {
       url: url,
       type: 'video',
@@ -25,7 +31,8 @@ function extractVideoResources() {
       size: 0, // Size will be determined by background script
       sizeFormatted: 'Unknown',
       filename: url.split('/').pop().split('?')[0] || 'video',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      thumbnailUrl: thumbnailUrl
     };
   }).filter(video => video.url && !video.url.startsWith('data:') && !video.url.startsWith('blob:'));
 }
