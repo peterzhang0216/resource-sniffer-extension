@@ -1,6 +1,8 @@
 let allResources = [];
 let selectedResources = new Set();
 let currentPreviewResource = null;
+let resourceGroups = {}; // 用于存储相似资源分组
+let resourceScores = {}; // 用于存储资源评分
 
 document.addEventListener('DOMContentLoaded', () => {
   const filterImages = document.getElementById('filter-images');
@@ -327,6 +329,7 @@ function updateResourcesList() {
   const filterVideos = document.getElementById('filter-videos').checked;
   const filterQuality = document.getElementById('filter-quality').value;
   const sortBy = document.getElementById('sort-by').value;
+  const filterSource = document.getElementById('filter-source')?.value || 'all';
   const resourcesList = document.getElementById('resources-list');
   const noResources = document.getElementById('no-resources');
   const resourceCount = document.getElementById('resource-count');
@@ -342,14 +345,65 @@ function updateResourcesList() {
     }
   }
   
+  function groupSimilarResources() {
+    resourceGroups = {};
+    
+    allResources.forEach(resource => {
+      let fingerprint = resource.url;
+      if (window.ResourceSnifferUtils && window.ResourceSnifferUtils.computeUrlFingerprint) {
+        fingerprint = window.ResourceSnifferUtils.computeUrlFingerprint(resource.url);
+      }
+      
+      if (!resourceGroups[fingerprint]) {
+        resourceGroups[fingerprint] = [];
+      }
+      
+      resourceGroups[fingerprint].push(resource);
+    });
+    
+    allResources.forEach(resource => {
+      let fingerprint = resource.url;
+      if (window.ResourceSnifferUtils && window.ResourceSnifferUtils.computeUrlFingerprint) {
+        fingerprint = window.ResourceSnifferUtils.computeUrlFingerprint(resource.url);
+      }
+      
+      resource.similarCount = resourceGroups[fingerprint] ? 
+        resourceGroups[fingerprint].length - 1 : 0;
+    });
+  }
+  
+  function calculateResourceScores() {
+    allResources.forEach(resource => {
+      if (!resource.score && window.ResourceSnifferUtils && window.ResourceSnifferUtils.calculateResourceScore) {
+        const scoreResult = window.ResourceSnifferUtils.calculateResourceScore(resource);
+        resource.score = scoreResult.score;
+        resource.scoreDetails = scoreResult.details;
+      }
+    });
+  }
+  
+  groupSimilarResources();
+  calculateResourceScores();
+  
   let filteredResources = allResources.filter(resource => {
     if (resource.type === 'image' && filterImages) return true;
     if (resource.type === 'video' && filterVideos) return true;
+    if (resource.type !== 'image' && resource.type !== 'video') return false;
+    
     return false;
   });
   
   if (filterQuality !== 'all') {
     filteredResources = filteredResources.filter(resource => resource.quality === filterQuality);
+  }
+  
+  if (filterSource !== 'all') {
+    filteredResources = filteredResources.filter(resource => {
+      if (filterSource === 'predicted' && resource.isPredicted) return true;
+      if (resource.source === filterSource) return true;
+      if (resource.sources && resource.sources.includes(filterSource)) return true;
+      return false;
+    });
   }
   
   filteredResources.sort((a, b) => {
@@ -362,6 +416,10 @@ function updateResourcesList() {
         return b.timestamp - a.timestamp;
       case 'time-asc':
         return a.timestamp - b.timestamp;
+      case 'quality-desc':
+        return (b.score || 0) - (a.score || 0);
+      case 'quality-asc':
+        return (a.score || 0) - (b.score || 0);
       default:
         return 0;
     }
@@ -393,6 +451,37 @@ function updateResourcesList() {
         </div>`;
       }
       
+      let sourceBadges = '';
+      if (resource.source) {
+        sourceBadges += `<span class="source-badge ${resource.source}">${getSourceLabel(resource.source)}</span>`;
+      }
+      
+      if (resource.sources && resource.sources.length > 0) {
+        resource.sources.forEach(source => {
+          sourceBadges += `<span class="source-badge ${source}">${getSourceLabel(source)}</span>`;
+        });
+      }
+      
+      if (resource.isPredicted) {
+        sourceBadges += `<span class="source-badge predicted">预测</span>`;
+      }
+      
+      let qualityBadge = '';
+      if (resource.quality && resource.quality !== 'unknown') {
+        qualityBadge = `<span class="quality-badge ${resource.quality}">${resource.quality}</span>`;
+      }
+      
+      let scoreBadge = '';
+      if (resource.score) {
+        const scoreClass = resource.score >= 70 ? 'high' : (resource.score >= 40 ? 'medium' : 'low');
+        scoreBadge = `<span class="score-badge ${scoreClass}">${resource.score}分</span>`;
+      }
+      
+      let similarBadge = '';
+      if (resource.similarCount > 0) {
+        similarBadge = `<span class="similar-badge">${resource.similarCount}个相似资源</span>`;
+      }
+      
       resourceItem.innerHTML = `
         <div class="resource-checkbox">
           <input type="checkbox" data-id="${resource.url}" ${isSelected ? 'checked' : ''}>
@@ -403,6 +492,13 @@ function updateResourcesList() {
           <div class="resource-details">
             <span class="resource-type">${resource.contentType}</span>
             <span class="resource-size">${resource.sizeFormatted}</span>
+            ${resource.width && resource.height ? `<span class="resource-dimensions">${resource.width}x${resource.height}</span>` : ''}
+          </div>
+          <div class="resource-badges">
+            ${sourceBadges}
+            ${qualityBadge}
+            ${scoreBadge}
+            ${similarBadge}
           </div>
         </div>
         <div class="resource-actions">
@@ -451,6 +547,13 @@ function updateResourcesList() {
           }
         }
       }
+      
+      const similarBadgeElement = resourceItem.querySelector('.similar-badge');
+      if (similarBadgeElement) {
+        similarBadgeElement.addEventListener('click', () => {
+          showSimilarResources(resource);
+        });
+      }
     });
   }
   
@@ -459,6 +562,114 @@ function updateResourcesList() {
   updateSelectAllCheckbox();
   
   updateDownloadButton();
+}
+
+function getSourceLabel(source) {
+  const sourceLabels = {
+    'dom': '标准DOM',
+    'css': 'CSS背景',
+    'custom-attribute': '自定义属性',
+    'shadow-dom': 'Shadow DOM',
+    'iframe': '嵌套框架',
+    'streaming': '流媒体',
+    'predicted': '预测资源'
+  };
+  
+  return sourceLabels[source] || source;
+}
+
+function showSimilarResources(resource) {
+  let fingerprint = resource.url;
+  if (window.ResourceSnifferUtils && window.ResourceSnifferUtils.computeUrlFingerprint) {
+    fingerprint = window.ResourceSnifferUtils.computeUrlFingerprint(resource.url);
+  }
+  
+  const similarResources = resourceGroups[fingerprint] || [];
+  
+  if (similarResources.length <= 1) return;
+  
+  const similarModal = document.getElementById('similar-modal') || createSimilarModal();
+  const similarContainer = document.getElementById('similar-resources-container');
+  const similarTitle = document.getElementById('similar-resources-title');
+  
+  similarContainer.innerHTML = '';
+  similarTitle.textContent = `${resource.filename} 的相似资源 (${similarResources.length - 1}个)`;
+  
+  similarResources.forEach(similar => {
+    if (similar.url === resource.url) return;
+    
+    const similarItem = document.createElement('div');
+    similarItem.className = 'similar-item';
+    
+    let thumbnailHtml = '';
+    if (similar.type === 'image') {
+      thumbnailHtml = `<img src="${similar.url}" class="similar-thumbnail" alt="Thumbnail">`;
+    } else if (similar.type === 'video') {
+      const posterAttr = similar.thumbnailUrl ? `poster="${similar.thumbnailUrl}"` : '';
+      thumbnailHtml = `<div class="similar-video-thumbnail">
+        <video width="80" height="80" preload="metadata" ${posterAttr} style="object-fit: cover;">
+          <source src="${similar.url}" type="${similar.contentType}">
+        </video>
+        <div class="play-icon">▶</div>
+      </div>`;
+    }
+    
+    similarItem.innerHTML = `
+      ${thumbnailHtml}
+      <div class="similar-info">
+        <div class="similar-name">${similar.filename}</div>
+        <div class="similar-details">
+          ${similar.width && similar.height ? `<span>${similar.width}x${similar.height}</span>` : ''}
+          <span>${similar.sizeFormatted}</span>
+          ${similar.quality ? `<span class="quality-badge ${similar.quality}">${similar.quality}</span>` : ''}
+        </div>
+      </div>
+      <div class="similar-actions">
+        <button class="similar-download-btn" data-url="${similar.url}">下载</button>
+      </div>
+    `;
+    
+    similarContainer.appendChild(similarItem);
+    
+    const downloadBtn = similarItem.querySelector('.similar-download-btn');
+    downloadBtn.addEventListener('click', () => {
+      downloadResource(similar);
+      similarModal.style.display = 'none';
+    });
+  });
+  
+  similarModal.style.display = 'block';
+}
+
+function createSimilarModal() {
+  const modal = document.createElement('div');
+  modal.id = 'similar-modal';
+  modal.className = 'modal';
+  
+  modal.innerHTML = `
+    <div class="modal-content similar-modal-content">
+      <div class="modal-header">
+        <h3 id="similar-resources-title">相似资源</h3>
+        <span class="close-similar-modal">&times;</span>
+      </div>
+      <div id="similar-resources-container" class="similar-resources-container"></div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  const closeBtn = modal.querySelector('.close-similar-modal');
+  closeBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+  
+  window.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+  
+  return modal;
 }
 
 function updateSelectAllCheckbox() {
