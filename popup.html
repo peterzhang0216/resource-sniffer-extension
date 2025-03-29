@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Resource Sniffer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Resource Sniffer</h1>
+    
+    <div class="controls">
+      <div class="filter-controls">
+        <label>
+          <input type="checkbox" id="filter-images" checked> 
+          图片
+        </label>
+        <label>
+          <input type="checkbox" id="filter-videos" checked> 
+          视频
+        </label>
+      </div>
+      
+      <div class="sort-controls">
+        <label>排序: 
+          <select id="sort-by">
+            <option value="size-desc">大小 (大到小)</option>
+            <option value="size-asc">大小 (小到大)</option>
+            <option value="time-desc">时间 (新到旧)</option>
+            <option value="time-asc">时间 (旧到新)</option>
+          </select>
+        </label>
+      </div>
+      
+      <button id="refresh-btn">刷新</button>
+    </div>
+    
+    <div class="download-settings">
+      <div class="download-path">
+        <label>下载路径: 
+          <input type="text" id="download-path" placeholder="downloads/resource-sniffer">
+        </label>
+      </div>
+      <div class="filename-template">
+        <label>文件名格式: 
+          <select id="filename-format">
+            <option value="original">原始文件名</option>
+            <option value="type-timestamp">[类型]-[时间戳]</option>
+            <option value="site-type-index">[网站]-[类型]-[序号]</option>
+            <option value="custom">自定义</option>
+          </select>
+        </label>
+        <input type="text" id="custom-filename-format" placeholder="{site}-{type}-{index}" style="display: none;">
+      </div>
+    </div>
+    
+    <div class="resources-container">
+      <div class="resources-header">
+        <div class="select-all">
+          <label>
+            <input type="checkbox" id="select-all"> 
+            全选
+          </label>
+        </div>
+        <div class="download-selected">
+          <button id="download-selected-btn" disabled>下载选中项</button>
+        </div>
+      </div>
+      
+      <div id="resources-list">
+        <div class="loading">正在加载资源...</div>
+      </div>
+      
+      <div id="no-resources" style="display: none;">
+        <p>未检测到资源。请刷新页面或浏览其他内容。</p>
+      </div>
+    </div>
+    
+    <div id="preview-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>资源预览</h2>
+        <div id="preview-container"></div>
+        <div class="preview-info">
+          <div id="preview-filename"></div>
+          <div id="preview-type"></div>
+          <div id="preview-size"></div>
+        </div>
+        <button id="preview-download-btn">下载</button>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <div class="stats">
+        已检测到 <span id="resource-count">0</span> 个资源
+      </div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
