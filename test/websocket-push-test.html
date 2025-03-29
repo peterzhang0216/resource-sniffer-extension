@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Push Service Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      color: #1a73e8;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .test-controls {
+      margin-bottom: 15px;
+    }
+    .test-results {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      max-height: 300px;
+      overflow: auto;
+    }
+    button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #0d47a1;
+    }
+    .resource-item {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .resource-preview {
+      max-width: 200px;
+      max-height: 150px;
+      margin-top: 10px;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+    .resource-list {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      margin-top: 15px;
+    }
+    .monitoring-dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .dashboard-card {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .stat-item {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+    }
+    .stat-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #1a73e8;
+    }
+    .connection-status {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .status-connected {
+      background-color: green;
+    }
+    .status-disconnected {
+      background-color: red;
+    }
+    .status-connecting {
+      background-color: orange;
+    }
+  </style>
+</head>
+<body>
+  <h1>WebSocket Push Service Test</h1>
+  <p>This page tests the real-time WebSocket push service of the Resource Sniffer extension.</p>
+  
+  <div class="test-section">
+    <h2>WebSocket Connection</h2>
+    <div class="connection-status">
+      <div id="connection-indicator" class="status-indicator status-disconnected"></div>
+      <span id="connection-status">Disconnected</span>
+    </div>
+    <div class="test-controls">
+      <button id="connect-btn">Connect</button>
+      <button id="disconnect-btn" disabled>Disconnect</button>
+    </div>
+    <div id="connection-results" class="test-results">Connection status will appear here...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Resource Monitoring</h2>
+    <div class="test-controls">
+      <button id="start-monitoring-btn" disabled>Start Monitoring</button>
+      <button id="stop-monitoring-btn" disabled>Stop Monitoring</button>
+      <button id="clear-resources-btn" disabled>Clear Resources</button>
+    </div>
+    <div id="monitoring-results" class="test-results">Monitoring status will appear here...</div>
+  </div>
+  
+  <div class="monitoring-dashboard">
+    <div class="dashboard-card">
+      <h3>Resource Statistics</h3>
+      <div class="stat-grid">
+        <div class="stat-item">
+          <div class="stat-label">Total Resources</div>
+          <div id="total-resources" class="stat-value">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Images</div>
+          <div id="image-resources" class="stat-value">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Videos</div>
+          <div id="video-resources" class="stat-value">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Other</div>
+          <div id="other-resources" class="stat-value">0</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="dashboard-card">
+      <h3>Connection Statistics</h3>
+      <div class="stat-grid">
+        <div class="stat-item">
+          <div class="stat-label">Messages Received</div>
+          <div id="messages-received" class="stat-value">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Last Message</div>
+          <div id="last-message-time" class="stat-value">-</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Connection Time</div>
+          <div id="connection-time" class="stat-value">0s</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Resources/sec</div>
+          <div id="resources-rate" class="stat-value">0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Received Resources</h2>
+    <div id="resource-list" class="resource-list">
+      <div class="no-resources">No resources received yet.</div>
+    </div>
+  </div>
+  
+  <!-- Test Resources -->
+  <div style="display: none;">
+    <img src="https://picsum.photos/id/237/800/600" alt="Test Image 1" id="test-image-1">
+    <img src="https://picsum.photos/id/1015/800/600" alt="Test Image 2" id="test-image-2">
+    <video id="test-video-1" width="320" height="240" controls>
+      <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    </video>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Variables
+      let socket = null;
+      let isConnected = false;
+      let isMonitoring = false;
+      let connectionStartTime = null;
+      let messagesReceived = 0;
+      let lastMessageTime = null;
+      let resourceStats = {
+        total: 0,
+        images: 0,
+        videos: 0,
+        other: 0
+      };
+      let resourcesReceived = [];
+      let updateTimer = null;
+      
+      // Elements
+      const connectBtn = document.getElementById('connect-btn');
+      const disconnectBtn = document.getElementById('disconnect-btn');
+      const startMonitoringBtn = document.getElementById('start-monitoring-btn');
+      const stopMonitoringBtn = document.getElementById('stop-monitoring-btn');
+      const clearResourcesBtn = document.getElementById('clear-resources-btn');
+      const connectionIndicator = document.getElementById('connection-indicator');
+      const connectionStatus = document.getElementById('connection-status');
+      const connectionResults = document.getElementById('connection-results');
+      const monitoringResults = document.getElementById('monitoring-results');
+      const resourceList = document.getElementById('resource-list');
+      
+      // Stats elements
+      const totalResourcesEl = document.getElementById('total-resources');
+      const imageResourcesEl = document.getElementById('image-resources');
+      const videoResourcesEl = document.getElementById('video-resources');
+      const otherResourcesEl = document.getElementById('other-resources');
+      const messagesReceivedEl = document.getElementById('messages-received');
+      const lastMessageTimeEl = document.getElementById('last-message-time');
+      const connectionTimeEl = document.getElementById('connection-time');
+      const resourcesRateEl = document.getElementById('resources-rate');
+      
+      // Connect to WebSocket
+      connectBtn.addEventListener('click', function() {
+        connectToWebSocket();
+      });
+      
+      // Disconnect from WebSocket
+      disconnectBtn.addEventListener('click', function() {
+        disconnectFromWebSocket();
+      });
+      
+      // Start monitoring
+      startMonitoringBtn.addEventListener('click', function() {
+        startMonitoring();
+      });
+      
+      // Stop monitoring
+      stopMonitoringBtn.addEventListener('click', function() {
+        stopMonitoring();
+      });
+      
+      // Clear resources
+      clearResourcesBtn.addEventListener('click', function() {
+        clearResources();
+      });
+      
+      // Connect to WebSocket
+      function connectToWebSocket() {
+        if (isConnected) return;
+        
+        updateConnectionStatus('connecting', 'Connecting...');
+        
+        try {
+          // In a real implementation, we would connect to the extension's WebSocket server
+          // For this test, we'll simulate the connection
+          
+          // Simulate connection delay
+          setTimeout(() => {
+            // Simulate successful connection
+            isConnected = true;
+            connectionStartTime = Date.now();
+            
+            updateConnectionStatus('connected', 'Connected');
+            
+            connectBtn.disabled = true;
+            disconnectBtn.disabled = false;
+            startMonitoringBtn.disabled = false;
+            stopMonitoringBtn.disabled = true;
+            clearResourcesBtn.disabled = false;
+            
+            connectionResults.innerHTML = `<span class="success">Connected successfully at ${new Date().toLocaleTimeString()}</span>`;
+            
+            // Start stats update timer
+            startStatsUpdateTimer();
+            
+            // Simulate receiving a connection message
+            simulateReceivedMessage({
+              action: 'connected',
+              timestamp: Date.now()
+            });
+          }, 1000);
+        } catch (e) {
+          updateConnectionStatus('disconnected', 'Connection failed');
+          connectionResults.innerHTML = `<span class="error">Connection failed: ${e.message}</span>`;
+        }
+      }
+      
+      // Disconnect from WebSocket
+      function disconnectFromWebSocket() {
+        if (!isConnected) return;
+        
+        try {
+          // In a real implementation, we would close the WebSocket connection
+          // For this test, we'll simulate the disconnection
+          
+          // Stop monitoring if active
+          if (isMonitoring) {
+            stopMonitoring();
+          }
+          
+          // Simulate disconnection
+          isConnected = false;
+          
+          updateConnectionStatus('disconnected', 'Disconnected');
+          
+          connectBtn.disabled = false;
+          disconnectBtn.disabled = true;
+          startMonitoringBtn.disabled = true;
+          stopMonitoringBtn.disabled = true;
+          
+          connectionResults.innerHTML += `\n<span class="info">Disconnected at ${new Date().toLocaleTimeString()}</span>`;
+          
+          // Stop stats update timer
+          stopStatsUpdateTimer();
+        } catch (e) {
+          connectionResults.innerHTML += `\n<span class="error">Disconnection error: ${e.message}</span>`;
+        }
+      }
+      
+      // Start monitoring
+      function startMonitoring() {
+        if (!isConnected || isMonitoring) return;
+        
+        try {
+          // In a real implementation, we would send a message to the extension to start monitoring
+          // For this test, we'll simulate the monitoring
+          
+          isMonitoring = true;
+          
+          startMonitoringBtn.disabled = true;
+          stopMonitoringBtn.disabled = false;
+          
+          monitoringResults.innerHTML = `<span class="success">Monitoring started at ${new Date().toLocaleTimeString()}</span>`;
+          
+          // Simulate receiving resources
+          startResourceSimulation();
+        } catch (e) {
+          monitoringResults.innerHTML = `<span class="error">Monitoring start failed: ${e.message}</span>`;
+        }
+      }
+      
+      // Stop monitoring
+      function stopMonitoring() {
+        if (!isConnected || !isMonitoring) return;
+        
+        try {
+          // In a real implementation, we would send a message to the extension to stop monitoring
+          // For this test, we'll simulate stopping the monitoring
+          
+          isMonitoring = false;
+          
+          startMonitoringBtn.disabled = false;
+          stopMonitoringBtn.disabled = true;
+          
+          monitoringResults.innerHTML += `\n<span class="info">Monitoring stopped at ${new Date().toLocaleTimeString()}</span>`;
+          
+          // Stop resource simulation
+          stopResourceSimulation();
+        } catch (e) {
+          monitoringResults.innerHTML += `\n<span class="error">Monitoring stop failed: ${e.message}</span>`;
+        }
+      }
+      
+      // Clear resources
+      function clearResources() {
+        resourceStats = {
+          total: 0,
+          images: 0,
+          videos: 0,
+          other: 0
+        };
+        
+        resourcesReceived = [];
+        
+        updateResourceList();
+        updateStats();
+        
+        monitoringResults.innerHTML += `\n<span class="info">Resources cleared at ${new Date().toLocaleTimeString()}</span>`;
+      }
+      
+      // Update connection status
+      function updateConnectionStatus(status, text) {
+        connectionIndicator.className = 'status-indicator';
+        
+        switch (status) {
+          case 'connected':
+            connectionIndicator.classList.add('status-connected');
+            break;
+          case 'disconnected':
+            connectionIndicator.classList.add('status-disconnected');
+            break;
+          case 'connecting':
+            connectionIndicator.classList.add('status-connecting');
+            break;
+        }
+        
+        connectionStatus.textContent = text;
+      }
+      
+      // Start stats update timer
+      function startStatsUpdateTimer() {
+        if (updateTimer) {
+          clearInterval(updateTimer);
+        }
+        
+        updateTimer = setInterval(() => {
+          updateStats();
+        }, 1000);
+      }
+      
+      // Stop stats update timer
+      function stopStatsUpdateTimer() {
+        if (updateTimer) {
+          clearInterval(updateTimer);
+          updateTimer = null;
+        }
+      }
+      
+      // Update stats
+      function updateStats() {
+        if (!isConnected) return;
+        
+        // Update resource stats
+        totalResourcesEl.textContent = resourceStats.total;
+        imageResourcesEl.textContent = resourceStats.images;
+        videoResourcesEl.textContent = resourceStats.videos;
+        otherResourcesEl.textContent = resourceStats.other;
+        
+        // Update connection stats
+        messagesReceivedEl.textContent = messagesReceived;
+        
+        if (lastMessageTime) {
+          lastMessageTimeEl.textContent = new Date(lastMessageTime).toLocaleTimeString();
+        }
+        
+        if (connectionStartTime) {
+          const connectionDuration = Math.floor((Date.now() - connectionStartTime) / 1000);
+          connectionTimeEl.textContent = `${connectionDuration}s`;
+          
+          // Calculate resources per second
+          if (connectionDuration > 0) {
+            const rate = (resourceStats.total / connectionDuration).toFixed(2);
+            resourcesRateEl.textContent = rate;
+          }
+        }
+      }
+      
+      // Simulate received message
+      function simulateReceivedMessage(message) {
+        if (!isConnected) return;
+        
+        messagesReceived++;
+        lastMessageTime = Date.now();
+        
+        // Process message
+        if (message.action === 'newResources' && message.resources) {
+          processNewResources(message.resources);
+        }
+        
+        // Update stats
+        updateStats();
+      }
+      
+      // Process new resources
+      function processNewResources(resources) {
+        if (!Array.isArray(resources)) return;
+        
+        resources.forEach(resource => {
+          resourceStats.total++;
+          
+          if (resource.type === 'image') {
+            resourceStats.images++;
+          } else if (resource.type === 'video') {
+            resourceStats.videos++;
+          } else {
+            resourceStats.other++;
+          }
+          
+          resourcesReceived.push({
+            ...resource,
+            receivedAt: Date.now()
+          });
+        });
+        
+        // Update resource list
+        updateResourceList();
+      }
+      
+      // Update resource list
+      function updateResourceList() {
+        if (resourcesReceived.length === 0) {
+          resourceList.innerHTML = '<div class="no-resources">No resources received yet.</div>';
+          return;
+        }
+        
+        // Sort resources by received time (newest first)
+        const sortedResources = [...resourcesReceived].sort((a, b) => b.receivedAt - a.receivedAt);
+        
+        // Limit to 50 resources for performance
+        const displayResources = sortedResources.slice(0, 50);
+        
+        let html = '';
+        
+        displayResources.forEach(resource => {
+          const time = new Date(resource.receivedAt).toLocaleTimeString();
+          const type = resource.type || 'unknown';
+          const url = resource.url || resource.data?.url || 'unknown';
+          const size = resource.size || resource.data?.size || 'unknown';
+          
+          html += `
+            <div class="resource-item">
+              <div class="resource-header">
+                <strong>${type}</strong> - ${time}
+              </div>
+              <div class="resource-url">${url}</div>
+              <div class="resource-details">
+                Size: ${typeof size === 'number' ? formatSize(size) : size}
+              </div>
+            </div>
+          `;
+        });
+        
+        resourceList.innerHTML = html;
+      }
+      
+      // Format size
+      function formatSize(bytes) {
+        if (bytes < 1024) {
+          return bytes + ' B';
+        } else if (bytes < 1024 * 1024) {
+          return (bytes / 1024).toFixed(2) + ' KB';
+        } else if (bytes < 1024 * 1024 * 1024) {
+          return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        } else {
+          return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        }
+      }
+      
+      // Resource simulation variables
+      let resourceSimulationTimer = null;
+      
+      // Start resource simulation
+      function startResourceSimulation() {
+        if (resourceSimulationTimer) {
+          clearInterval(resourceSimulationTimer);
+        }
+        
+        // Simulate receiving resources every 2-5 seconds
+        resourceSimulationTimer = setInterval(() => {
+          if (!isConnected || !isMonitoring) return;
+          
+          // Generate random resources
+          const resourceCount = Math.floor(Math.random() * 5) + 1; // 1-5 resources
+          const resources = [];
+          
+          for (let i = 0; i < resourceCount; i++) {
+            const resourceType = Math.random() < 0.7 ? 'image' : (Math.random() < 0.5 ? 'video' : 'other');
+            const resourceSize = Math.floor(Math.random() * 10000000); // 0-10MB
+            
+            let url;
+            if (resourceType === 'image') {
+              const imageId = Math.floor(Math.random() * 1000);
+              url = `https://picsum.photos/id/${imageId}/800/600`;
+            } else if (resourceType === 'video') {
+              url = 'https://www.w3schools.com/html/mov_bbb.mp4';
+            } else {
+              url = `https://example.com/resource/${Math.floor(Math.random() * 1000)}`;
+            }
+            
+            resources.push({
+              type: resourceType,
+              data: {
+                url: url,
+                size: resourceSize,
+                mimeType: resourceType === 'image' ? 'image/jpeg' : 
+                          resourceType === 'video' ? 'video/mp4' : 'application/octet-stream'
+              }
+            });
+          }
+          
+          // Simulate receiving resources
+          simulateReceivedMessage({
+            action: 'newResources',
+            resources: resources,
+            timestamp: Date.now()
+          });
+          
+          monitoringResults.innerHTML += `\n<span class="info">Received ${resourceCount} new resources at ${new Date().toLocaleTimeString()}</span>`;
+          
+          // Limit monitoring results height
+          if (monitoringResults.scrollHeight > 1000) {
+            const lines = monitoringResults.innerHTML.split('\n');
+            if (lines.length > 20) {
+              monitoringResults.innerHTML = lines.slice(lines.length - 20).join('\n');
+            }
+          }
+          
+          // Auto-scroll monitoring results
+          monitoringResults.scrollTop = monitoringResults.scrollHeight;
+        }, Math.floor(Math.random() * 3000) + 2000); // 2-5 seconds
+      }
+      
+      // Stop resource simulation
+      function stopResourceSimulation() {
+        if (resourceSimulationTimer) {
+          clearInterval(resourceSimulationTimer);
+          resourceSimulationTimer = null;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

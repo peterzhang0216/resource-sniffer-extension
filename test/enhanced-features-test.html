@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enhanced Features Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      color: #1a73e8;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .test-controls {
+      margin-bottom: 15px;
+    }
+    .test-results {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      max-height: 300px;
+      overflow: auto;
+    }
+    button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #0d47a1;
+    }
+    .resource-item {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .resource-preview {
+      max-width: 200px;
+      max-height: 150px;
+      margin-top: 10px;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .feature-card {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+    }
+    .feature-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .feature-status {
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 12px;
+    }
+    .status-active {
+      background-color: #e6f4ea;
+      color: #137333;
+    }
+    .status-inactive {
+      background-color: #fce8e6;
+      color: #c5221f;
+    }
+    .media-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .media-item {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 10px;
+      text-align: center;
+    }
+    .media-item img, .media-item video {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+    }
+    .media-caption {
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Resource Sniffer Enhanced Features Test</h1>
+  <p>This page tests all the enhanced features of the Resource Sniffer extension.</p>
+  
+  <div class="test-section">
+    <h2>Feature Status Dashboard</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>深度学习模型</h3>
+          <span class="feature-status status-inactive" id="ml-status">未检测</span>
+        </div>
+        <p>使用CNN识别图片/视频内容，提高检测准确性</p>
+        <button id="test-ml-btn">测试ML模型</button>
+        <div class="test-results" id="ml-results">点击按钮测试ML模型...</div>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>启发式规则引擎</h3>
+          <span class="feature-status status-inactive" id="rule-engine-status">未检测</span>
+        </div>
+        <p>根据URL模式和DOM结构动态调整检测策略</p>
+        <button id="test-rule-engine-btn">测试规则引擎</button>
+        <div class="test-results" id="rule-engine-results">点击按钮测试规则引擎...</div>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>分布式爬虫</h3>
+          <span class="feature-status status-inactive" id="distributed-status">未检测</span>
+        </div>
+        <p>多线程并行检测，支持跨域资源发现</p>
+        <button id="test-distributed-btn">测试分布式爬虫</button>
+        <div class="test-results" id="distributed-results">点击按钮测试分布式爬虫...</div>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>智能缓存</h3>
+          <span class="feature-status status-inactive" id="cache-status">未检测</span>
+        </div>
+        <p>使用LRU缓存优化重复检测</p>
+        <button id="test-cache-btn">测试智能缓存</button>
+        <div class="test-results" id="cache-results">点击按钮测试智能缓存...</div>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>资源指纹</h3>
+          <span class="feature-status status-inactive" id="fingerprint-status">未检测</span>
+        </div>
+        <p>基于内容hash的重复资源过滤</p>
+        <button id="test-fingerprint-btn">测试资源指纹</button>
+        <div class="test-results" id="fingerprint-results">点击按钮测试资源指纹...</div>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>元数据分析</h3>
+          <span class="feature-status status-inactive" id="metadata-status">未检测</span>
+        </div>
+        <p>提取更多资源属性用于质量评估</p>
+        <button id="test-metadata-btn">测试元数据分析</button>
+        <div class="test-results" id="metadata-results">点击按钮测试元数据分析...</div>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>协议适配</h3>
+          <span class="feature-status status-inactive" id="protocol-status">未检测</span>
+        </div>
+        <p>支持更多流媒体和下载协议</p>
+        <button id="test-protocol-btn">测试协议适配</button>
+        <div class="test-results" id="protocol-results">点击按钮测试协议适配...</div>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-header">
+          <h3>实时监控</h3>
+          <span class="feature-status status-inactive" id="monitoring-status">未检测</span>
+        </div>
+        <p>使用WebSocket实时推送新发现的资源</p>
+        <button id="test-monitoring-btn">测试实时监控</button>
+        <div class="test-results" id="monitoring-results">点击按钮测试实时监控...</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test Media Resources</h2>
+    <p>The following media resources are used to test the enhanced detection capabilities:</p>
+    
+    <div class="media-container">
+      <div class="media-item">
+        <img src="https://picsum.photos/id/237/800/600" alt="Test Image 1" id="test-image-1">
+        <div class="media-caption">High Quality JPEG Image</div>
+      </div>
+      
+      <div class="media-item">
+        <img src="https://picsum.photos/id/1015/800/600" alt="Test Image 2" id="test-image-2">
+        <div class="media-caption">Landscape JPEG Image</div>
+      </div>
+      
+      <div class="media-item">
+        <img src="https://picsum.photos/id/1018/800/600" alt="Test Image 3" id="test-image-3">
+        <div class="media-caption">Nature JPEG Image</div>
+      </div>
+      
+      <div class="media-item">
+        <video id="test-video-1" width="320" height="240" controls>
+          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+        </video>
+        <div class="media-caption">MP4 Video</div>
+      </div>
+      
+      <div class="media-item">
+        <video id="test-video-2" width="320" height="240" controls>
+          <source src="https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4" type="video/mp4">
+        </video>
+        <div class="media-caption">Sample MP4 Video</div>
+      </div>
+      
+      <div class="media-item">
+        <iframe width="320" height="240" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <div class="media-caption">YouTube Embedded Video</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <h2>All Features Test</h2>
+    <div class="test-controls">
+      <button id="test-all-btn">Test All Features</button>
+      <button id="reset-all-btn">Reset All Tests</button>
+    </div>
+    <div class="test-results" id="all-results">Click the button to test all features...</div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Test ML Model
+      document.getElementById('test-ml-btn').addEventListener('click', function() {
+        testFeature('ml', 'testMLModel');
+      });
+      
+      // Test Rule Engine
+      document.getElementById('test-rule-engine-btn').addEventListener('click', function() {
+        testFeature('rule-engine', 'testRuleEngine');
+      });
+      
+      // Test Distributed Crawler
+      document.getElementById('test-distributed-btn').addEventListener('click', function() {
+        testFeature('distributed', 'testDistributedCrawler');
+      });
+      
+      // Test Intelligent Cache
+      document.getElementById('test-cache-btn').addEventListener('click', function() {
+        testFeature('cache', 'testIntelligentCache');
+      });
+      
+      // Test Resource Fingerprint
+      document.getElementById('test-fingerprint-btn').addEventListener('click', function() {
+        testFeature('fingerprint', 'testResourceFingerprint');
+      });
+      
+      // Test Metadata Analysis
+      document.getElementById('test-metadata-btn').addEventListener('click', function() {
+        testFeature('metadata', 'testMetadataAnalysis');
+      });
+      
+      // Test Protocol Adapters
+      document.getElementById('test-protocol-btn').addEventListener('click', function() {
+        testFeature('protocol', 'testProtocolAdapters');
+      });
+      
+      // Test Real-time Monitoring
+      document.getElementById('test-monitoring-btn').addEventListener('click', function() {
+        testFeature('monitoring', 'testRealtimeMonitoring');
+      });
+      
+      // Test All Features
+      document.getElementById('test-all-btn').addEventListener('click', function() {
+        testAllFeatures();
+      });
+      
+      // Reset All Tests
+      document.getElementById('reset-all-btn').addEventListener('click', function() {
+        resetAllTests();
+      });
+      
+      // Test a specific feature
+      function testFeature(featureId, action) {
+        const resultsElement = document.getElementById(`${featureId}-results`);
+        const statusElement = document.getElementById(`${featureId}-status`);
+        
+        resultsElement.textContent = `Testing ${featureId} feature...`;
+        statusElement.className = 'feature-status status-inactive';
+        statusElement.textContent = '测试中';
+        
+        chrome.runtime.sendMessage({
+          action: action,
+          url: window.location.href,
+          resources: getPageResources()
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            statusElement.className = 'feature-status status-inactive';
+            statusElement.textContent = '测试失败';
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+            statusElement.className = 'feature-status status-active';
+            statusElement.textContent = '已激活';
+          } else {
+            resultsElement.innerHTML = `<span class="error">Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+            statusElement.className = 'feature-status status-inactive';
+            statusElement.textContent = '未激活';
+          }
+        });
+      }
+      
+      // Test all features
+      function testAllFeatures() {
+        const allResultsElement = document.getElementById('all-results');
+        allResultsElement.textContent = 'Testing all features...';
+        
+        const features = [
+          { id: 'ml', action: 'testMLModel' },
+          { id: 'rule-engine', action: 'testRuleEngine' },
+          { id: 'distributed', action: 'testDistributedCrawler' },
+          { id: 'cache', action: 'testIntelligentCache' },
+          { id: 'fingerprint', action: 'testResourceFingerprint' },
+          { id: 'metadata', action: 'testMetadataAnalysis' },
+          { id: 'protocol', action: 'testProtocolAdapters' },
+          { id: 'monitoring', action: 'testRealtimeMonitoring' }
+        ];
+        
+        let results = {};
+        let completedTests = 0;
+        
+        features.forEach(feature => {
+          const statusElement = document.getElementById(`${feature.id}-status`);
+          statusElement.className = 'feature-status status-inactive';
+          statusElement.textContent = '测试中';
+          
+          chrome.runtime.sendMessage({
+            action: feature.action,
+            url: window.location.href,
+            resources: getPageResources()
+          }, function(response) {
+            completedTests++;
+            
+            if (chrome.runtime.lastError) {
+              results[feature.id] = {
+                success: false,
+                error: chrome.runtime.lastError.message
+              };
+              
+              statusElement.className = 'feature-status status-inactive';
+              statusElement.textContent = '测试失败';
+            } else if (response && response.success) {
+              results[feature.id] = {
+                success: true,
+                results: response.results
+              };
+              
+              statusElement.className = 'feature-status status-active';
+              statusElement.textContent = '已激活';
+            } else {
+              results[feature.id] = {
+                success: false,
+                results: response
+              };
+              
+              statusElement.className = 'feature-status status-inactive';
+              statusElement.textContent = '未激活';
+            }
+            
+            if (completedTests === features.length) {
+              const successCount = Object.values(results).filter(r => r.success).length;
+              
+              allResultsElement.innerHTML = `<span class="${successCount === features.length ? 'success' : 'error'}">Completed ${successCount}/${features.length} tests successfully</span>\n\n${JSON.stringify(results, null, 2)}`;
+            }
+          });
+        });
+      }
+      
+      // Reset all tests
+      function resetAllTests() {
+        const featureIds = ['ml', 'rule-engine', 'distributed', 'cache', 'fingerprint', 'metadata', 'protocol', 'monitoring'];
+        
+        featureIds.forEach(id => {
+          const resultsElement = document.getElementById(`${id}-results`);
+          const statusElement = document.getElementById(`${id}-status`);
+          
+          resultsElement.textContent = `点击按钮测试${id}...`;
+          statusElement.className = 'feature-status status-inactive';
+          statusElement.textContent = '未检测';
+        });
+        
+        document.getElementById('all-results').textContent = 'Click the button to test all features...';
+      }
+      
+      // Get all resources on the page
+      function getPageResources() {
+        const resources = [];
+        
+        // Get images
+        const images = document.querySelectorAll('img');
+        images.forEach((img, index) => {
+          if (img.src) {
+            resources.push({
+              id: `img_${index}`,
+              url: img.src,
+              type: 'image',
+              width: img.naturalWidth,
+              height: img.naturalHeight
+            });
+          }
+        });
+        
+        // Get videos
+        const videos = document.querySelectorAll('video');
+        videos.forEach((video, index) => {
+          const sources = video.querySelectorAll('source');
+          sources.forEach((source, sourceIndex) => {
+            if (source.src) {
+              resources.push({
+                id: `video_${index}_${sourceIndex}`,
+                url: source.src,
+                type: 'video',
+                width: video.videoWidth,
+                height: video.videoHeight
+              });
+            }
+          });
+        });
+        
+        // Get iframes
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach((iframe, index) => {
+          if (iframe.src) {
+            resources.push({
+              id: `iframe_${index}`,
+              url: iframe.src,
+              type: 'iframe',
+              width: iframe.width,
+              height: iframe.height
+            });
+          }
+        });
+        
+        return resources;
+      }
+    });
+  </script>
+</body>
+</html>

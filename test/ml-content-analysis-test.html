@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ML Content Analysis Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      color: #1a73e8;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .test-controls {
+      margin-bottom: 15px;
+    }
+    .test-results {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      max-height: 300px;
+      overflow: auto;
+    }
+    button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #0d47a1;
+    }
+    .resource-item {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .resource-preview {
+      max-width: 200px;
+      max-height: 150px;
+      margin-top: 10px;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .resource-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .resource-card-header {
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-bottom: 1px solid #ddd;
+    }
+    .resource-card-body {
+      padding: 10px;
+    }
+    .resource-card-footer {
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      background-color: #f9f9f9;
+    }
+    .resource-preview-container {
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f0f0f0;
+    }
+    .metadata-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .metadata-table th, .metadata-table td {
+      padding: 6px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    .metadata-table th {
+      font-weight: bold;
+      color: #555;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .badge-ml {
+      background-color: #e1f5fe;
+      color: #0288d1;
+    }
+    .badge-high {
+      background-color: #e8f5e9;
+      color: #388e3c;
+    }
+    .badge-medium {
+      background-color: #fff8e1;
+      color: #ffa000;
+    }
+    .badge-low {
+      background-color: #ffebee;
+      color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+  <h1>ML Content Analysis Test</h1>
+  <p>This page tests the ML-based content analysis features of the Resource Sniffer extension.</p>
+  
+  <div class="test-section">
+    <h2>1. Deep Learning Model Test</h2>
+    <div class="test-controls">
+      <button id="test-ml-model">Test ML Model</button>
+    </div>
+    <div id="ml-model-results" class="test-results">Results will appear here...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>2. Resource Fingerprinting Test</h2>
+    <div class="test-controls">
+      <button id="test-fingerprinting">Test Fingerprinting</button>
+    </div>
+    <div id="fingerprinting-results" class="test-results">Results will appear here...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>3. Metadata Analysis Test</h2>
+    <div class="test-controls">
+      <button id="test-metadata">Test Metadata Analysis</button>
+    </div>
+    <div id="metadata-results" class="test-results">Results will appear here...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>4. Combined Analysis Test</h2>
+    <div class="test-controls">
+      <button id="test-combined">Test Combined Analysis</button>
+    </div>
+    <div id="combined-results" class="test-results">Results will appear here...</div>
+    <div id="resource-grid" class="resource-grid"></div>
+  </div>
+  
+  <!-- Test Resources -->
+  <div style="display: none;">
+    <img src="https://picsum.photos/id/237/800/600" alt="Test Image 1" id="test-image-1">
+    <img src="https://picsum.photos/id/237/400/300" alt="Test Image 1 Thumbnail" id="test-image-1-thumb">
+    <img src="https://picsum.photos/id/1015/800/600" alt="Test Image 2" id="test-image-2">
+    <video id="test-video-1" width="320" height="240" controls>
+      <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    </video>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Test ML Model
+      document.getElementById('test-ml-model').addEventListener('click', function() {
+        const resultsElement = document.getElementById('ml-model-results');
+        resultsElement.textContent = 'Testing ML model...';
+        
+        chrome.runtime.sendMessage({
+          action: 'testMLModel',
+          resources: [
+            {
+              url: 'https://picsum.photos/id/237/800/600',
+              type: 'image',
+              width: 800,
+              height: 600
+            },
+            {
+              url: 'https://picsum.photos/id/1015/800/600',
+              type: 'image',
+              width: 800,
+              height: 600
+            },
+            {
+              url: 'https://www.w3schools.com/html/mov_bbb.mp4',
+              type: 'video',
+              width: 320,
+              height: 240
+            }
+          ]
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">ML Model Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">ML Model Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+      
+      // Test Fingerprinting
+      document.getElementById('test-fingerprinting').addEventListener('click', function() {
+        const resultsElement = document.getElementById('fingerprinting-results');
+        resultsElement.textContent = 'Testing fingerprinting...';
+        
+        chrome.runtime.sendMessage({
+          action: 'testFingerprinting',
+          resources: [
+            {
+              url: 'https://picsum.photos/id/237/800/600',
+              type: 'image',
+              width: 800,
+              height: 600
+            },
+            {
+              url: 'https://picsum.photos/id/237/400/300',
+              type: 'image',
+              width: 400,
+              height: 300
+            },
+            {
+              url: 'https://picsum.photos/id/237/800/600?random=123',
+              type: 'image',
+              width: 800,
+              height: 600
+            },
+            {
+              url: 'https://picsum.photos/id/1015/800/600',
+              type: 'image',
+              width: 800,
+              height: 600
+            }
+          ]
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Fingerprinting Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">Fingerprinting Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+      
+      // Test Metadata Analysis
+      document.getElementById('test-metadata').addEventListener('click', function() {
+        const resultsElement = document.getElementById('metadata-results');
+        resultsElement.textContent = 'Testing metadata analysis...';
+        
+        chrome.runtime.sendMessage({
+          action: 'testMetadataAnalysis',
+          resources: [
+            {
+              url: 'https://picsum.photos/id/237/800/600',
+              type: 'image',
+              width: 800,
+              height: 600,
+              size: 153600
+            },
+            {
+              url: 'https://www.w3schools.com/html/mov_bbb.mp4',
+              type: 'video',
+              width: 320,
+              height: 240,
+              size: 1048576
+            },
+            {
+              url: 'https://example.com/music/high-quality-song.mp3',
+              type: 'audio',
+              size: 5242880
+            }
+          ]
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Metadata Analysis Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">Metadata Analysis Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+      
+      // Test Combined Analysis
+      document.getElementById('test-combined').addEventListener('click', function() {
+        const resultsElement = document.getElementById('combined-results');
+        const resourceGrid = document.getElementById('resource-grid');
+        
+        resultsElement.textContent = 'Testing combined analysis...';
+        resourceGrid.innerHTML = '';
+        
+        chrome.runtime.sendMessage({
+          action: 'detectResources'
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Combined Analysis Test Successful!</span>\n\n${JSON.stringify(response, null, 2)}`;
+            
+            // Display resources in grid
+            if (response.resources && response.resources.length > 0) {
+              response.resources.forEach(resource => {
+                const card = document.createElement('div');
+                card.className = 'resource-card';
+                
+                const header = document.createElement('div');
+                header.className = 'resource-card-header';
+                header.innerHTML = `
+                  <strong>${getFilenameFromUrl(resource.url)}</strong>
+                  <div>
+                    <span class="badge badge-${resource.quality}">${resource.quality}</span>
+                    ${resource.mlCategory ? `<span class="badge badge-ml">${resource.mlCategory}</span>` : ''}
+                  </div>
+                `;
+                
+                const body = document.createElement('div');
+                body.className = 'resource-card-body';
+                
+                const previewContainer = document.createElement('div');
+                previewContainer.className = 'resource-preview-container';
+                
+                if (resource.type === 'image') {
+                  const img = document.createElement('img');
+                  img.src = resource.url;
+                  img.className = 'resource-preview';
+                  img.alt = getFilenameFromUrl(resource.url);
+                  previewContainer.appendChild(img);
+                } else if (resource.type === 'video') {
+                  const video = document.createElement('video');
+                  video.src = resource.url;
+                  video.className = 'resource-preview';
+                  video.controls = true;
+                  video.muted = true;
+                  previewContainer.appendChild(video);
+                } else {
+                  previewContainer.textContent = `${resource.type.toUpperCase()} Resource`;
+                }
+                
+                body.appendChild(previewContainer);
+                
+                const metadataTable = document.createElement('table');
+                metadataTable.className = 'metadata-table';
+                metadataTable.innerHTML = `
+                  <tr>
+                    <th>Type:</th>
+                    <td>${resource.type}</td>
+                  </tr>
+                  <tr>
+                    <th>Size:</th>
+                    <td>${resource.sizeFormatted}</td>
+                  </tr>
+                  ${resource.width && resource.height ? `
+                  <tr>
+                    <th>Dimensions:</th>
+                    <td>${resource.width}x${resource.height}</td>
+                  </tr>
+                  ` : ''}
+                  <tr>
+                    <th>Quality:</th>
+                    <td>${resource.quality}</td>
+                  </tr>
+                  ${resource.mlCategory ? `
+                  <tr>
+                    <th>ML Category:</th>
+                    <td>${resource.mlCategory} (${(resource.mlConfidence * 100).toFixed(1)}%)</td>
+                  </tr>
+                  ` : ''}
+                  <tr>
+                    <th>Fingerprint:</th>
+                    <td>${resource.fingerprint}</td>
+                  </tr>
+                `;
+                
+                body.appendChild(metadataTable);
+                
+                const footer = document.createElement('div');
+                footer.className = 'resource-card-footer';
+                footer.innerHTML = `
+                  <button class="preview-btn" data-url="${resource.url}">Preview</button>
+                  <button class="download-btn" data-url="${resource.url}">Download</button>
+                `;
+                
+                card.appendChild(header);
+                card.appendChild(body);
+                card.appendChild(footer);
+                
+                resourceGrid.appendChild(card);
+              });
+              
+              // Add event listeners to buttons
+              document.querySelectorAll('.preview-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                  const url = this.getAttribute('data-url');
+                  window.open(url, '_blank');
+                });
+              });
+              
+              document.querySelectorAll('.download-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                  const url = this.getAttribute('data-url');
+                  chrome.runtime.sendMessage({
+                    action: 'downloadResource',
+                    url: url
+                  });
+                });
+              });
+            }
+          } else {
+            resultsElement.innerHTML = `<span class="error">Combined Analysis Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+      
+      function getFilenameFromUrl(url) {
+        try {
+          const urlObj = new URL(url);
+          const pathname = urlObj.pathname;
+          const filename = pathname.split('/').pop();
+          return filename || 'Unknown';
+        } catch (e) {
+          return 'Unknown';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detection Optimization Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      color: #1a73e8;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .test-controls {
+      margin-bottom: 15px;
+    }
+    .test-results {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      max-height: 300px;
+      overflow: auto;
+    }
+    button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #0d47a1;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+    .chart-container {
+      height: 300px;
+      margin-top: 20px;
+    }
+    .progress-bar {
+      height: 20px;
+      background-color: #e0e0e0;
+      border-radius: 10px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background-color: #1a73e8;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .stat-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      background-color: #f9f9f9;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #1a73e8;
+      margin: 10px 0;
+    }
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Detection Optimization Test</h1>
+  <p>This page tests the optimization features of the Resource Sniffer extension.</p>
+  
+  <div class="test-section">
+    <h2>1. Rule Engine Test</h2>
+    <div class="test-controls">
+      <button id="test-rule-engine">Test Rule Engine</button>
+    </div>
+    <div id="rule-engine-results" class="test-results">Results will appear here...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>2. Distributed Processing Test</h2>
+    <div class="test-controls">
+      <button id="test-distributed">Test Distributed Processing</button>
+      <select id="worker-count">
+        <option value="1">1 Worker</option>
+        <option value="2">2 Workers</option>
+        <option value="4" selected>4 Workers</option>
+        <option value="8">8 Workers</option>
+      </select>
+    </div>
+    <div class="progress-bar">
+      <div id="distributed-progress" class="progress-bar-fill"></div>
+    </div>
+    <div id="distributed-results" class="test-results">Results will appear here...</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Tasks</div>
+        <div id="total-tasks" class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Completed Tasks</div>
+        <div id="completed-tasks" class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Workers</div>
+        <div id="active-workers" class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Processing Time</div>
+        <div id="processing-time" class="stat-value">0ms</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <h2>3. Intelligent Caching Test</h2>
+    <div class="test-controls">
+      <button id="test-caching">Test Intelligent Caching</button>
+      <button id="clear-cache">Clear Cache</button>
+    </div>
+    <div id="caching-results" class="test-results">Results will appear here...</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Cache Size</div>
+        <div id="cache-size" class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Cache Hits</div>
+        <div id="cache-hits" class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Cache Misses</div>
+        <div id="cache-misses" class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Hit Ratio</div>
+        <div id="hit-ratio" class="stat-value">0%</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <h2>4. Combined Optimization Test</h2>
+    <div class="test-controls">
+      <button id="test-combined">Run Combined Test</button>
+    </div>
+    <div id="combined-results" class="test-results">Results will appear here...</div>
+  </div>
+  
+  <!-- Test Resources -->
+  <div style="display: none;">
+    <img src="https://picsum.photos/id/237/800/600" alt="Test Image 1" id="test-image-1">
+    <img src="https://picsum.photos/id/237/400/300" alt="Test Image 1 Thumbnail" id="test-image-1-thumb">
+    <img src="https://picsum.photos/id/1015/800/600" alt="Test Image 2" id="test-image-2">
+    <video id="test-video-1" width="320" height="240" controls>
+      <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    </video>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Test Rule Engine
+      document.getElementById('test-rule-engine').addEventListener('click', function() {
+        const resultsElement = document.getElementById('rule-engine-results');
+        resultsElement.textContent = 'Testing rule engine...';
+        
+        chrome.runtime.sendMessage({
+          action: 'testRuleEngine',
+          url: window.location.href,
+          domInfo: {
+            title: document.title,
+            elementCount: document.querySelectorAll('*').length,
+            imageCount: document.querySelectorAll('img').length,
+            videoCount: document.querySelectorAll('video').length,
+            audioCount: document.querySelectorAll('audio').length,
+            iframeCount: document.querySelectorAll('iframe').length,
+            hasShadowDOM: Array.from(document.querySelectorAll('*')).some(el => el.shadowRoot)
+          }
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Rule Engine Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">Rule Engine Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+      
+      // Test Distributed Processing
+      document.getElementById('test-distributed').addEventListener('click', function() {
+        const resultsElement = document.getElementById('distributed-results');
+        const progressElement = document.getElementById('distributed-progress');
+        const workerCount = parseInt(document.getElementById('worker-count').value);
+        
+        resultsElement.textContent = 'Testing distributed processing...';
+        progressElement.style.width = '0%';
+        
+        // Reset stats
+        document.getElementById('total-tasks').textContent = '0';
+        document.getElementById('completed-tasks').textContent = '0';
+        document.getElementById('active-workers').textContent = '0';
+        document.getElementById('processing-time').textContent = '0ms';
+        
+        const startTime = Date.now();
+        
+        chrome.runtime.sendMessage({
+          action: 'testDistributedProcessing',
+          workerCount: workerCount,
+          taskCount: 10
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            const processingTime = Date.now() - startTime;
+            document.getElementById('processing-time').textContent = `${processingTime}ms`;
+            
+            resultsElement.innerHTML = `<span class="success">Distributed Processing Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">Distributed Processing Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+        
+        // Update progress periodically
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+          chrome.runtime.sendMessage({
+            action: 'getDistributedProcessingStatus'
+          }, function(response) {
+            if (chrome.runtime.lastError || !response || !response.success) {
+              clearInterval(progressInterval);
+              return;
+            }
+            
+            const status = response.status;
+            document.getElementById('total-tasks').textContent = status.totalTasks || '0';
+            document.getElementById('completed-tasks').textContent = status.completedTasks || '0';
+            document.getElementById('active-workers').textContent = status.activeWorkers || '0';
+            
+            if (status.totalTasks > 0) {
+              progress = Math.round((status.completedTasks / status.totalTasks) * 100);
+              progressElement.style.width = `${progress}%`;
+            }
+            
+            if (status.completedTasks === status.totalTasks && status.totalTasks > 0) {
+              clearInterval(progressInterval);
+            }
+          });
+        }, 200);
+      });
+      
+      // Test Intelligent Caching
+      document.getElementById('test-caching').addEventListener('click', function() {
+        const resultsElement = document.getElementById('caching-results');
+        resultsElement.textContent = 'Testing intelligent caching...';
+        
+        chrome.runtime.sendMessage({
+          action: 'testIntelligentCaching'
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Intelligent Caching Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+            
+            // Update cache stats
+            const stats = response.stats || {};
+            document.getElementById('cache-size').textContent = stats.resourceCacheSize || '0';
+            document.getElementById('cache-hits').textContent = stats.hits || '0';
+            document.getElementById('cache-misses').textContent = stats.misses || '0';
+            document.getElementById('hit-ratio').textContent = `${Math.round((stats.hitRatio || 0) * 100)}%`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">Intelligent Caching Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+      
+      // Clear Cache
+      document.getElementById('clear-cache').addEventListener('click', function() {
+        const resultsElement = document.getElementById('caching-results');
+        resultsElement.textContent = 'Clearing cache...';
+        
+        chrome.runtime.sendMessage({
+          action: 'clearCache'
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Cache Cleared Successfully!</span>`;
+            
+            // Reset cache stats
+            document.getElementById('cache-size').textContent = '0';
+            document.getElementById('cache-hits').textContent = '0';
+            document.getElementById('cache-misses').textContent = '0';
+            document.getElementById('hit-ratio').textContent = '0%';
+          } else {
+            resultsElement.innerHTML = `<span class="error">Failed to Clear Cache</span>`;
+          }
+        });
+      });
+      
+      // Test Combined Optimization
+      document.getElementById('test-combined').addEventListener('click', function() {
+        const resultsElement = document.getElementById('combined-results');
+        resultsElement.textContent = 'Running combined optimization test...';
+        
+        chrome.runtime.sendMessage({
+          action: 'testCombinedOptimization',
+          url: window.location.href,
+          domInfo: {
+            title: document.title,
+            elementCount: document.querySelectorAll('*').length,
+            imageCount: document.querySelectorAll('img').length,
+            videoCount: document.querySelectorAll('video').length,
+            audioCount: document.querySelectorAll('audio').length,
+            iframeCount: document.querySelectorAll('iframe').length,
+            hasShadowDOM: Array.from(document.querySelectorAll('*')).some(el => el.shadowRoot)
+          }
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Combined Optimization Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">Combined Optimization Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
