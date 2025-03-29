@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Sniffer Enhanced Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #1a73e8;
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .image-item {
+            width: 100%;
+            height: 150px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 4px;
+        }
+        .video-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        .audio-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .shadow-host {
+            padding: 20px;
+            border: 1px dashed #999;
+            border-radius: 4px;
+        }
+        .custom-attr-container img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+        }
+        iframe {
+            width: 100%;
+            height: 300px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Resource Sniffer Enhanced Test Page</h1>
+    <p>This page contains various types of resources for testing the enhanced Resource Sniffer extension.</p>
+
+    <!-- Standard DOM Images -->
+    <div class="test-section">
+        <h2>1. Standard DOM Images</h2>
+        <div class="image-grid">
+            <img src="https://picsum.photos/id/237/300/200" alt="Standard Image 1">
+            <img src="https://picsum.photos/id/238/300/200" alt="Standard Image 2">
+            <img src="https://picsum.photos/id/239/300/200" alt="Standard Image 3">
+            <img src="https://picsum.photos/id/240/300/200" alt="Standard Image 4">
+        </div>
+    </div>
+
+    <!-- CSS Background Images -->
+    <div class="test-section">
+        <h2>2. CSS Background Images</h2>
+        <div class="image-grid">
+            <div class="image-item" style="background-image: url('https://picsum.photos/id/241/300/200');"></div>
+            <div class="image-item" style="background-image: url('https://picsum.photos/id/242/300/200');"></div>
+            <div class="image-item" style="background-image: url('https://picsum.photos/id/243/300/200');"></div>
+            <div class="image-item" style="background-image: url('https://picsum.photos/id/244/300/200');"></div>
+        </div>
+    </div>
+
+    <!-- Custom Attribute Images -->
+    <div class="test-section custom-attr-container">
+        <h2>3. Custom Attribute Images</h2>
+        <div>
+            <img data-src="https://picsum.photos/id/245/300/200" src="https://picsum.photos/id/245/300/200" alt="Custom Attribute Image 1">
+            <img data-original="https://picsum.photos/id/246/300/200" src="https://picsum.photos/id/246/300/200" alt="Custom Attribute Image 2">
+            <img data-lazy="https://picsum.photos/id/247/300/200" src="https://picsum.photos/id/247/300/200" alt="Custom Attribute Image 3">
+            <img data-bg="https://picsum.photos/id/248/300/200" src="https://picsum.photos/id/248/300/200" alt="Custom Attribute Image 4">
+        </div>
+    </div>
+
+    <!-- Shadow DOM Resources -->
+    <div class="test-section">
+        <h2>4. Shadow DOM Resources</h2>
+        <div id="shadow-host" class="shadow-host">
+            <p>This container has a shadow DOM with images inside.</p>
+        </div>
+    </div>
+
+    <!-- Video Resources -->
+    <div class="test-section">
+        <h2>5. Video Resources</h2>
+        <div class="video-container">
+            <video controls width="300">
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <video controls width="300">
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </div>
+
+    <!-- Audio Resources -->
+    <div class="test-section">
+        <h2>6. Audio Resources</h2>
+        <div class="audio-container">
+            <audio controls>
+                <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+            <audio controls>
+                <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+    </div>
+
+    <!-- Streaming Media -->
+    <div class="test-section">
+        <h2>7. Streaming Media (HLS)</h2>
+        <div id="hls-player">
+            <video id="hls-video" controls width="100%"></video>
+        </div>
+    </div>
+
+    <!-- iFrame Resources -->
+    <div class="test-section">
+        <h2>8. iFrame Resources</h2>
+        <iframe src="https://picsum.photos/" title="Embedded Content"></iframe>
+    </div>
+
+    <script>
+        // Create Shadow DOM with images
+        const shadowHost = document.getElementById('shadow-host');
+        const shadowRoot = shadowHost.attachShadow({mode: 'open'});
+        
+        shadowRoot.innerHTML = `
+            <style>
+                .shadow-image-container {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                }
+                img {
+                    max-width: 200px;
+                    height: auto;
+                }
+            </style>
+            <div class="shadow-image-container">
+                <img src="https://picsum.photos/id/249/300/200" alt="Shadow DOM Image 1">
+                <img src="https://picsum.photos/id/250/300/200" alt="Shadow DOM Image 2">
+                <div style="background-image: url('https://picsum.photos/id/251/300/200'); width: 200px; height: 150px;"></div>
+            </div>
+        `;
+
+        // Load HLS player if available
+        if (typeof Hls !== 'undefined') {
+            const video = document.getElementById('hls-video');
+            const hls = new Hls();
+            hls.loadSource('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                video.play();
+            });
+        } else {
+            document.getElementById('hls-player').innerHTML = '<p>HLS.js not available. Cannot play streaming content.</p>';
+        }
+
+        // Dynamically add images after page load
+        setTimeout(() => {
+            const dynamicContainer = document.createElement('div');
+            dynamicContainer.className = 'test-section';
+            dynamicContainer.innerHTML = `
+                <h2>9. Dynamically Added Resources</h2>
+                <div class="image-grid">
+                    <img src="https://picsum.photos/id/252/300/200" alt="Dynamic Image 1">
+                    <img src="https://picsum.photos/id/253/300/200" alt="Dynamic Image 2">
+                </div>
+            `;
+            document.body.appendChild(dynamicContainer);
+        }, 3000);
+    </script>
+</body>
+</html>

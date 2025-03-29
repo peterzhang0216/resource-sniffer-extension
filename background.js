@@ -331,8 +331,82 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       
       message.resources.forEach(newResource => {
-        const existingIndex = resources[tabId].findIndex(r => r.url === newResource.url);
+        const existingIndex = resources[tabId].findIndex(r => {
+          if (r.url === newResource.url) return true;
+          
+          if (window.ResourceSnifferUtils && window.ResourceSnifferUtils.computeUrlSimilarity) {
+            const similarity = window.ResourceSnifferUtils.computeUrlSimilarity(r.url, newResource.url);
+            return similarity > 0.85; // 相似度阈值
+          }
+          
+          return false;
+        });
+        
         if (existingIndex === -1) {
+          if (window.ResourceSnifferUtils && window.ResourceSnifferUtils.calculateResourceScore) {
+            const scoreResult = window.ResourceSnifferUtils.calculateResourceScore(newResource);
+            newResource.score = scoreResult.score;
+            newResource.scoreDetails = scoreResult.details;
+          }
+          
+          resources[tabId].push(newResource);
+        } else {
+          const existingResource = resources[tabId][existingIndex];
+          
+          if (newResource.width && newResource.height) {
+            if (!existingResource.width || !existingResource.height || 
+                (newResource.width * newResource.height > existingResource.width * existingResource.height)) {
+              existingResource.width = newResource.width;
+              existingResource.height = newResource.height;
+            }
+          }
+          
+          if (newResource.quality && newResource.quality !== 'unknown') {
+            existingResource.quality = newResource.quality;
+          }
+          
+          if (newResource.source && !existingResource.sources) {
+            existingResource.sources = [existingResource.source || 'unknown'];
+          }
+          
+          if (newResource.source && existingResource.sources && 
+              !existingResource.sources.includes(newResource.source)) {
+            existingResource.sources.push(newResource.source);
+          }
+        }
+      });
+      
+      chrome.storage.local.set({ resources: resources });
+    }
+  } else if (message.action === 'addPredictedResources') {
+    if (sender.tab) {
+      const tabId = sender.tab.id.toString();
+      if (!resources[tabId]) {
+        resources[tabId] = [];
+      }
+      
+      message.resources.forEach(newResource => {
+        const existingIndex = resources[tabId].findIndex(r => {
+          if (r.url === newResource.url) return true;
+          
+          if (window.ResourceSnifferUtils && window.ResourceSnifferUtils.computeUrlSimilarity) {
+            const similarity = window.ResourceSnifferUtils.computeUrlSimilarity(r.url, newResource.url);
+            return similarity > 0.7; // 预测资源使用较低的相似度阈值
+          }
+          
+          return false;
+        });
+        
+        if (existingIndex === -1) {
+          newResource.confidence = newResource.confidence || 0.7;
+          newResource.isPredicted = true;
+          
+          if (window.ResourceSnifferUtils && window.ResourceSnifferUtils.calculateResourceScore) {
+            const scoreResult = window.ResourceSnifferUtils.calculateResourceScore(newResource);
+            newResource.score = scoreResult.score;
+            newResource.scoreDetails = scoreResult.details;
+          }
+          
           resources[tabId].push(newResource);
         }
       });

@@ -9,7 +9,9 @@
     "storage",
     "tabs",
     "activeTab",
-    "contextMenus"
+    "contextMenus",
+    "webNavigation",
+    "unlimitedStorage"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -28,7 +30,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "js": ["utils.js", "resource-cache.js", "content.js"]
     }
   ],
   "icons": {
