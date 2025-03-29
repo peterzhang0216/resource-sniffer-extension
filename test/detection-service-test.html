@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detection Service Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      color: #1a73e8;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .test-controls {
+      margin-bottom: 15px;
+    }
+    .test-results {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      max-height: 300px;
+      overflow: auto;
+    }
+    button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #0d47a1;
+    }
+    .resource-item {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .resource-preview {
+      max-width: 200px;
+      max-height: 150px;
+      margin-top: 10px;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Detection Service Test</h1>
+  <p>This page tests the enhanced detection service features of the Resource Sniffer extension.</p>
+  
+  <div class="test-section">
+    <h2>1. Heuristic Rule Engine Test</h2>
+    <div class="test-controls">
+      <button id="test-rule-engine">Test Rule Engine</button>
+    </div>
+    <div id="rule-engine-results" class="test-results">Results will appear here...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>2. Distributed Processing Test</h2>
+    <div class="test-controls">
+      <button id="test-distributed">Test Distributed Processing</button>
+    </div>
+    <div id="distributed-results" class="test-results">Results will appear here...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>3. Intelligent Caching Test</h2>
+    <div class="test-controls">
+      <button id="test-caching">Test Intelligent Caching</button>
+    </div>
+    <div id="caching-results" class="test-results">Results will appear here...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>4. Resource Deduplication Test</h2>
+    <div class="test-controls">
+      <button id="test-deduplication">Test Deduplication</button>
+    </div>
+    <div id="deduplication-results" class="test-results">Results will appear here...</div>
+  </div>
+  
+  <!-- Test Resources -->
+  <div style="display: none;">
+    <img src="https://picsum.photos/id/237/800/600" alt="Test Image 1" id="test-image-1">
+    <img src="https://picsum.photos/id/237/400/300" alt="Test Image 1 Thumbnail" id="test-image-1-thumb">
+    <img src="https://picsum.photos/id/1015/800/600" alt="Test Image 2" id="test-image-2">
+    <video id="test-video-1" width="320" height="240" controls>
+      <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    </video>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Test Rule Engine
+      document.getElementById('test-rule-engine').addEventListener('click', function() {
+        const resultsElement = document.getElementById('rule-engine-results');
+        resultsElement.textContent = 'Testing rule engine...';
+        
+        chrome.runtime.sendMessage({
+          action: 'testRuleEngine',
+          url: window.location.href,
+          domInfo: {
+            imageCount: document.querySelectorAll('img').length,
+            videoCount: document.querySelectorAll('video').length,
+            iframeCount: document.querySelectorAll('iframe').length
+          }
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Rule Engine Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">Rule Engine Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+      
+      // Test Distributed Processing
+      document.getElementById('test-distributed').addEventListener('click', function() {
+        const resultsElement = document.getElementById('distributed-results');
+        resultsElement.textContent = 'Testing distributed processing...';
+        
+        chrome.runtime.sendMessage({
+          action: 'testDistributedProcessing',
+          taskCount: 10
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Distributed Processing Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">Distributed Processing Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+      
+      // Test Intelligent Caching
+      document.getElementById('test-caching').addEventListener('click', function() {
+        const resultsElement = document.getElementById('caching-results');
+        resultsElement.textContent = 'Testing intelligent caching...';
+        
+        chrome.runtime.sendMessage({
+          action: 'testIntelligentCaching'
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Intelligent Caching Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">Intelligent Caching Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+      
+      // Test Deduplication
+      document.getElementById('test-deduplication').addEventListener('click', function() {
+        const resultsElement = document.getElementById('deduplication-results');
+        resultsElement.textContent = 'Testing deduplication...';
+        
+        const testResources = [
+          {
+            url: 'https://picsum.photos/id/237/800/600',
+            type: 'image',
+            width: 800,
+            height: 600
+          },
+          {
+            url: 'https://picsum.photos/id/237/400/300',
+            type: 'image',
+            width: 400,
+            height: 300
+          },
+          {
+            url: 'https://picsum.photos/id/237/200/150',
+            type: 'image',
+            width: 200,
+            height: 150
+          },
+          {
+            url: 'https://picsum.photos/id/1015/800/600',
+            type: 'image',
+            width: 800,
+            height: 600
+          }
+        ];
+        
+        chrome.runtime.sendMessage({
+          action: 'testDeduplication',
+          resources: testResources
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Deduplication Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">Deduplication Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
