@@ -2,6 +2,18 @@
 function extractImageResources() {
   const images = Array.from(document.querySelectorAll('img'));
   return images.map(img => {
+    let quality = 'unknown';
+    
+    if (img.naturalWidth >= 1920 || img.naturalHeight >= 1080) {
+      quality = 'HD';
+    } else if (img.naturalWidth >= 1280 || img.naturalHeight >= 720) {
+      quality = 'HD';
+    } else if (img.naturalWidth >= 640 || img.naturalHeight >= 480) {
+      quality = 'SD';
+    } else if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+      quality = 'LD';
+    }
+    
     return {
       url: img.src,
       type: 'image',
@@ -9,7 +21,10 @@ function extractImageResources() {
       size: 0, // Size will be determined by background script
       sizeFormatted: 'Unknown',
       filename: img.src.split('/').pop().split('?')[0] || 'image',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      width: img.naturalWidth || 0,
+      height: img.naturalHeight || 0,
+      quality: quality
     };
   }).filter(img => img.url && !img.url.startsWith('data:') && !img.url.startsWith('blob:'));
 }
@@ -20,8 +35,29 @@ function extractVideoResources() {
     const url = video.src || video.currentSrc;
     
     let thumbnailUrl = '';
-    if (video.tagName === 'VIDEO' && video.poster) {
-      thumbnailUrl = video.poster;
+    let width = 0;
+    let height = 0;
+    let duration = 0;
+    let quality = 'unknown';
+    
+    if (video.tagName === 'VIDEO') {
+      if (video.poster) {
+        thumbnailUrl = video.poster;
+      }
+      
+      width = video.videoWidth || 0;
+      height = video.videoHeight || 0;
+      duration = video.duration || 0;
+      
+      if (width >= 1920 || height >= 1080) {
+        quality = 'HD';
+      } else if (width >= 1280 || height >= 720) {
+        quality = 'HD';
+      } else if (width >= 640 || height >= 480) {
+        quality = 'SD';
+      } else if (width > 0 && height > 0) {
+        quality = 'LD';
+      }
     }
     
     return {
@@ -32,7 +68,11 @@ function extractVideoResources() {
       sizeFormatted: 'Unknown',
       filename: url.split('/').pop().split('?')[0] || 'video',
       timestamp: Date.now(),
-      thumbnailUrl: thumbnailUrl
+      thumbnailUrl: thumbnailUrl,
+      width: width,
+      height: height,
+      duration: duration,
+      quality: quality
     };
   }).filter(video => video.url && !video.url.startsWith('data:') && !video.url.startsWith('blob:'));
 }
@@ -102,5 +142,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'scanPage') {
     sendResourcesToBackground();
     sendResponse({ success: true });
+  } else if (message.action === 'downloadAllMedia') {
+    sendResourcesToBackground();
+    const siteName = window.location.hostname.replace('www.', '');
+    chrome.runtime.sendMessage({
+      action: 'downloadSelectedResources',
+      resources: [...extractImageResources(), ...extractVideoResources()],
+      siteName: siteName
+    });
   }
 });
