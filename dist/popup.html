@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Resource Sniffer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Resource Sniffer</h1>
+    
+    <div class="tab-container">
+      <div class="tabs">
+        <button class="tab-button active" data-tab="resources-tab">资源</button>
+        <button class="tab-button" data-tab="history-tab">历史</button>
+        <button class="tab-button" data-tab="settings-tab">设置</button>
+      </div>
+      
+      <div id="resources-tab" class="tab-content active">
+        <div class="filter-bar">
+          <div class="filter-controls">
+            <label>
+              <input type="checkbox" id="filter-images" checked> 
+              图片
+            </label>
+            <label>
+              <input type="checkbox" id="filter-videos" checked> 
+              视频
+            </label>
+          </div>
+          
+          <div class="quality-filter">
+            <label>质量: 
+              <select id="filter-quality">
+                <option value="all">全部</option>
+                <option value="HD">高清 (HD)</option>
+                <option value="SD">标清 (SD)</option>
+                <option value="LD">低清 (LD)</option>
+              </select>
+            </label>
+          </div>
+          
+          <div class="sort-controls">
+            <label>排序: 
+              <select id="sort-by">
+                <option value="size-desc">大小 (大到小)</option>
+                <option value="size-asc">大小 (小到大)</option>
+                <option value="time-desc">时间 (新到旧)</option>
+                <option value="time-asc">时间 (旧到新)</option>
+              </select>
+            </label>
+          </div>
+          
+          <button id="refresh-btn">刷新</button>
+        </div>
+        
+        <div class="download-settings">
+          <div class="download-path">
+            <label>下载路径: 
+              <input type="text" id="download-path" placeholder="downloads/resource-sniffer">
+            </label>
+          </div>
+          <div class="filename-template">
+            <label>文件名格式: 
+              <select id="filename-format">
+                <option value="original">原始文件名</option>
+                <option value="type-timestamp">[类型]-[时间戳]</option>
+                <option value="site-type-index">[网站]-[类型]-[序号]</option>
+                <option value="custom">自定义</option>
+              </select>
+            </label>
+            <input type="text" id="custom-filename-format" placeholder="{site}-{type}-{index}" style="display: none;">
+          </div>
+        </div>
+        
+        <div class="resources-container">
+          <div class="resources-header">
+            <div class="select-all">
+              <label>
+                <input type="checkbox" id="select-all"> 
+                全选
+              </label>
+            </div>
+            <div class="download-selected">
+              <button id="download-selected-btn" disabled>下载选中项</button>
+            </div>
+          </div>
+          
+          <div id="resources-list">
+            <div class="loading">正在加载资源...</div>
+          </div>
+          
+          <div id="no-resources" style="display: none;">
+            <p>未检测到资源。请刷新页面或浏览其他内容。</p>
+          </div>
+        </div>
+      </div>
+      
+      <div id="history-tab" class="tab-content">
+        <div id="download-history-list">
+          <div class="loading">正在加载下载历史...</div>
+        </div>
+        <div id="no-history" style="display: none;">
+          <p>暂无下载历史记录。</p>
+        </div>
+      </div>
+      
+      <div id="settings-tab" class="tab-content">
+        <div class="settings-section">
+          <h3>下载设置</h3>
+          <div class="setting-item">
+            <label>
+              并发下载数量:
+              <input type="number" id="max-concurrent-downloads" min="1" max="5" value="2">
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              下载速度限制 (KB/s, 0表示不限制):
+              <input type="number" id="download-speed-limit" min="0" value="0">
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input type="checkbox" id="categorize-by-website" checked>
+              按网站分类存储
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input type="checkbox" id="categorize-by-type" checked>
+              按资源类型分类存储
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              默认下载路径:
+              <input type="text" id="default-download-path" value="downloads/resource-sniffer">
+            </label>
+          </div>
+        </div>
+        <div class="settings-actions">
+          <button id="save-settings-btn">保存设置</button>
+          <button id="reset-settings-btn">重置设置</button>
+        </div>
+      </div>
+    </div>
+    
+    <div id="preview-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>资源预览</h2>
+        <div id="preview-container"></div>
+        <div class="preview-info">
+          <div id="preview-filename"></div>
+          <div id="preview-type"></div>
+          <div id="preview-size"></div>
+        </div>
+        <button id="preview-download-btn">下载</button>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <div class="stats">
+        已检测到 <span id="resource-count">0</span> 个资源
+      </div>
+    </div>
+  </div>
+  
+  <div id="download-progress-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>下载进度</h2>
+      <div id="active-downloads-container"></div>
+      <div class="download-progress-footer">
+        <div id="download-queue-info">队列中: <span id="queue-count">0</span></div>
+        <button id="close-progress-modal" class="secondary-btn">关闭</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
