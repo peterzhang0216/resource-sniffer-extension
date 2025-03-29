@@ -1,0 +1,82 @@
+{
+  "manifest_version": 3,
+  "name": "Resource Sniffer",
+  "version": "1.0",
+  "description": "A Chrome extension to detect and download images and videos from web pages",
+  "permissions": [
+    "webRequest",
+    "downloads",
+    "storage",
+    "tabs",
+    "activeTab",
+    "contextMenus",
+    "webNavigation",
+    "unlimitedStorage",
+    "system.cpu",
+    "system.memory"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background/background-main.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icon16.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "src/config/constants.js",
+        "src/config/settings.js",
+        "src/utils/url-utils.js",
+        "src/utils/file-utils.js",
+        "src/utils/resource-utils.js",
+        "src/services/logging-service.js",
+        "src/services/app-state-logger.js",
+        "src/services/download-logger.js",
+        "src/services/detection-service.js",
+        "src/services/fingerprint-service.js",
+        "src/services/metadata-service.js",
+        "src/content/detectors/dom-detector.js",
+        "src/content/detectors/css-detector.js",
+        "src/content/detectors/shadow-detector.js",
+        "src/content/detectors/attribute-detector.js",
+        "src/content/detectors/streaming-detector.js",
+        "src/content/message-handler.js",
+        "src/content/content-main.js"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/workers/*.js", 
+        "src/workers/distributed/*.js",
+        "src/services/*.js",
+        "src/components/*.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
+  "commands": {
+    "download-all-resources": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S"
+      },
+      "description": "下载所有检测到的资源"
+    }
+  }
+}
