@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Resource Sniffer",
-  "version": "1.0",
-  "description": "A Chrome extension to detect and download images and videos from web pages",
+  "version": "2.0.0",
+  "description": "A Chrome extension to detect, analyze, and download images and videos from web pages with advanced logging capabilities",
   "permissions": [
     "webRequest",
     "downloads",
@@ -13,7 +13,9 @@
     "webNavigation",
     "unlimitedStorage",
     "system.cpu",
-    "system.memory"
+    "system.memory",
+    "alarms",
+    "notifications"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -39,9 +41,13 @@
         "src/utils/url-utils.js",
         "src/utils/file-utils.js",
         "src/utils/resource-utils.js",
+        "src/utils/compression-utils.js",
+        "src/services/indexeddb-service.js",
         "src/services/logging-service.js",
         "src/services/app-state-logger.js",
         "src/services/download-logger.js",
+        "src/services/log-analyzer-service.js",
+        "src/services/remote-logging-service.js",
         "src/services/detection-service.js",
         "src/services/fingerprint-service.js",
         "src/services/metadata-service.js",
@@ -52,6 +58,10 @@
         "src/content/detectors/streaming-detector.js",
         "src/content/message-handler.js",
         "src/content/content-main.js"
+      ],
+      "css": [
+        "styles/log-viewer.css",
+        "styles/log-tab.css"
       ]
     }
   ],
@@ -61,7 +71,9 @@
         "src/workers/*.js", 
         "src/workers/distributed/*.js",
         "src/services/*.js",
-        "src/components/*.js"
+        "src/components/*.js",
+        "src/libs/*.js",
+        "styles/*.css"
       ],
       "matches": ["<all_urls>"]
     }
