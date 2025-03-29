@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Resource Sniffer</title>
   <link rel="stylesheet" href="styles/popup.css">
+  <link rel="stylesheet" href="styles/log-viewer.css">
 </head>
 <body>
   <div class="container">
@@ -20,6 +21,7 @@
         <button class="tab-button active" data-tab="resources-tab">资源</button>
         <button class="tab-button" data-tab="history-tab">历史</button>
         <button class="tab-button" data-tab="stats-tab">统计</button>
+        <button class="tab-button" data-tab="logs-tab">日志</button>
       </div>
       
       <div id="resources-tab" class="tab-content active">
@@ -124,6 +126,10 @@
             </div>
           </div>
         </div>
+      </div>
+      
+      <div id="logs-tab" class="tab-content">
+        <div id="log-tab-container" class="log-tab-container"></div>
       </div>
     </div>
     

@@ -11,9 +11,13 @@ import FilterBar from '../components/filter-bar.js';
 import DownloadHistory from '../components/download-history.js';
 import SettingsPanel from '../components/settings-panel.js';
 import PreviewModal from '../components/preview-modal.js';
+import { LogTab } from '../components/log-tab.js';
 import ResourceService from '../services/resource-service.js';
 import DownloadService from '../services/download-service.js';
 import StorageService from '../services/storage-service.js';
+import loggingService from '../services/logging-service.js';
+import appStateLogger from '../services/app-state-logger.js';
+import downloadLogger from '../services/download-logger.js';
 import { MESSAGE_ACTIONS } from '../config/constants.js';
 
 /**
@@ -116,6 +120,13 @@ class PopupMain {
       );
       this.components.previewModal.initialize();
       
+      this.components.logTab = new LogTab(
+        document.getElementById('log-tab-container')
+      );
+      this.components.logTab.initialize();
+      
+      appStateLogger.logExtensionStartup();
+      
       console.log('所有组件已初始化');
     } catch (e) {
       console.error('初始化组件错误:', e);
@@ -202,6 +213,17 @@ class PopupMain {
         this.components.downloadHistory.loadHistory();
       } else if (tabId === 'stats-tab') {
         this._loadResourceStats();
+      } else if (tabId === 'logs-tab') {
+        this.components.logTab.show();
+        
+        appStateLogger.logUserInteraction('view_logs', {
+          tabId: this.currentTab?.id,
+          url: this.currentTab?.url
+        });
+      } else {
+        if (this.components.logTab) {
+          this.components.logTab.hide();
+        }
       }
     } catch (e) {
       console.error('切换标签错误:', e);

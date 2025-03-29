@@ -7,6 +7,7 @@
  */
 
 import { DEFAULT_DOWNLOAD_SETTINGS, FILENAME_FORMATS, SORT_METHODS, STORAGE_KEYS } from '../config/settings.js';
+import loggingService, { LogLevel, LogCategory } from '../services/logging-service.js';
 
 /**
  * 设置面板组件类
@@ -167,6 +168,64 @@ class SettingsPanel {
         </div>
         
         <div class="settings-section">
+          <h3>日志设置</h3>
+          <div class="settings-item checkbox">
+            <input type="checkbox" id="enable-logging" ${this.settings.enableLogging !== false ? 'checked' : ''}>
+            <label for="enable-logging">启用日志记录</label>
+          </div>
+          <div class="settings-item">
+            <label for="log-level">日志级别:</label>
+            <select id="log-level" ${this.settings.enableLogging === false ? 'disabled' : ''}>
+              <option value="${LogLevel.DEBUG}" ${this.settings.logLevel === LogLevel.DEBUG ? 'selected' : ''}>调试</option>
+              <option value="${LogLevel.INFO}" ${this.settings.logLevel === LogLevel.INFO || !this.settings.logLevel ? 'selected' : ''}>信息</option>
+              <option value="${LogLevel.WARNING}" ${this.settings.logLevel === LogLevel.WARNING ? 'selected' : ''}>警告</option>
+              <option value="${LogLevel.ERROR}" ${this.settings.logLevel === LogLevel.ERROR ? 'selected' : ''}>错误</option>
+            </select>
+          </div>
+          <div class="settings-item">
+            <label for="max-logs">最大日志数量:</label>
+            <input type="number" id="max-logs" min="100" max="10000" step="100" value="${this.settings.maxLogs || 1000}" ${this.settings.enableLogging === false ? 'disabled' : ''}>
+          </div>
+          <div class="settings-item">
+            <label>启用的日志类别:</label>
+            <div class="log-categories-container">
+              <div class="log-category-item">
+                <input type="checkbox" id="log-category-app" value="${LogCategory.APP}" ${this.settings.enabledLogCategories && this.settings.enabledLogCategories.includes(LogCategory.APP) ? 'checked' : ''} ${this.settings.enableLogging === false ? 'disabled' : ''}>
+                <label for="log-category-app">应用</label>
+              </div>
+              <div class="log-category-item">
+                <input type="checkbox" id="log-category-detection" value="${LogCategory.DETECTION}" ${this.settings.enabledLogCategories && this.settings.enabledLogCategories.includes(LogCategory.DETECTION) ? 'checked' : ''} ${this.settings.enableLogging === false ? 'disabled' : ''}>
+                <label for="log-category-detection">检测</label>
+              </div>
+              <div class="log-category-item">
+                <input type="checkbox" id="log-category-download" value="${LogCategory.DOWNLOAD}" ${this.settings.enabledLogCategories && this.settings.enabledLogCategories.includes(LogCategory.DOWNLOAD) ? 'checked' : ''} ${this.settings.enableLogging === false ? 'disabled' : ''}>
+                <label for="log-category-download">下载</label>
+              </div>
+              <div class="log-category-item">
+                <input type="checkbox" id="log-category-resource" value="${LogCategory.RESOURCE}" ${this.settings.enabledLogCategories && this.settings.enabledLogCategories.includes(LogCategory.RESOURCE) ? 'checked' : ''} ${this.settings.enableLogging === false ? 'disabled' : ''}>
+                <label for="log-category-resource">资源</label>
+              </div>
+              <div class="log-category-item">
+                <input type="checkbox" id="log-category-network" value="${LogCategory.NETWORK}" ${this.settings.enabledLogCategories && this.settings.enabledLogCategories.includes(LogCategory.NETWORK) ? 'checked' : ''} ${this.settings.enableLogging === false ? 'disabled' : ''}>
+                <label for="log-category-network">网络</label>
+              </div>
+              <div class="log-category-item">
+                <input type="checkbox" id="log-category-worker" value="${LogCategory.WORKER}" ${this.settings.enabledLogCategories && this.settings.enabledLogCategories.includes(LogCategory.WORKER) ? 'checked' : ''} ${this.settings.enableLogging === false ? 'disabled' : ''}>
+                <label for="log-category-worker">工作线程</label>
+              </div>
+              <div class="log-category-item">
+                <input type="checkbox" id="log-category-ui" value="${LogCategory.UI}" ${this.settings.enabledLogCategories && this.settings.enabledLogCategories.includes(LogCategory.UI) ? 'checked' : ''} ${this.settings.enableLogging === false ? 'disabled' : ''}>
+                <label for="log-category-ui">界面</label>
+              </div>
+            </div>
+          </div>
+          <div class="settings-item">
+            <button id="clear-logs" class="warning-button" ${this.settings.enableLogging === false ? 'disabled' : ''}>清除所有日志</button>
+            <button id="export-logs" ${this.settings.enableLogging === false ? 'disabled' : ''}>导出日志</button>
+          </div>
+        </div>
+        
+        <div class="settings-section">
           <h3>高级设置</h3>
           <div class="settings-item checkbox">
             <input type="checkbox" id="auto-detect-on-page-load" ${this.settings.autoDetectOnPageLoad !== false ? 'checked' : ''}>
@@ -230,6 +289,70 @@ class SettingsPanel {
         }
       });
     });
+    
+    const enableLogging = document.getElementById('enable-logging');
+    if (enableLogging) {
+      enableLogging.addEventListener('change', (e) => {
+        const isEnabled = e.target.checked;
+        
+        const logControls = [
+          document.getElementById('log-level'),
+          document.getElementById('max-logs'),
+          document.getElementById('clear-logs'),
+          document.getElementById('export-logs')
+        ];
+        
+        const logCategoryCheckboxes = document.querySelectorAll('[id^="log-category-"]');
+        
+        [...logControls, ...logCategoryCheckboxes].forEach(control => {
+          if (control) {
+            control.disabled = !isEnabled;
+          }
+        });
+      });
+    }
+    
+    const clearLogsBtn = document.getElementById('clear-logs');
+    if (clearLogsBtn) {
+      clearLogsBtn.addEventListener('click', () => {
+        const confirmed = window.confirm('确定要清除所有日志吗？此操作不可撤销。');
+        if (confirmed) {
+          loggingService.clearLogs();
+          this._showToast('已清除所有日志');
+        }
+      });
+    }
+    
+    const exportLogsBtn = document.getElementById('export-logs');
+    if (exportLogsBtn) {
+      exportLogsBtn.addEventListener('click', () => {
+        const format = 'json'; // 默认导出格式
+        const exportData = loggingService.exportLogs(format);
+        
+        if (!exportData) {
+          this._showToast('导出日志失败: 没有日志数据', 'error');
+          return;
+        }
+        
+        const blob = new Blob([exportData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `resource-sniffer-logs-${new Date().toISOString().replace(/:/g, '-')}.${format}`;
+        a.style.display = 'none';
+        
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+        
+        this._showToast('日志导出成功');
+      });
+    }
     
     const resetBtn = document.getElementById('reset-settings');
     if (resetBtn) {
@@ -319,6 +442,18 @@ class SettingsPanel {
     const minImageSize = parseInt(document.getElementById('min-image-size').value) || 0;
     const minVideoSize = parseInt(document.getElementById('min-video-size').value) || 0;
     
+    const enableLogging = document.getElementById('enable-logging').checked;
+    const logLevel = parseInt(document.getElementById('log-level').value) || LogLevel.INFO;
+    const maxLogs = parseInt(document.getElementById('max-logs').value) || 1000;
+    
+    const enabledLogCategories = [];
+    const logCategoryCheckboxes = document.querySelectorAll('[id^="log-category-"]');
+    logCategoryCheckboxes.forEach(checkbox => {
+      if (checkbox.checked) {
+        enabledLogCategories.push(checkbox.value);
+      }
+    });
+    
     this.settings = {
       maxConcurrentDownloads,
       downloadSpeedLimit,
@@ -340,10 +475,23 @@ class SettingsPanel {
       enableContextMenu,
       enableKeyboardShortcuts,
       minImageSize,
-      minVideoSize
+      minVideoSize,
+      enableLogging,
+      logLevel,
+      maxLogs,
+      enabledLogCategories
     };
     
     this._saveSettingsToStorage();
+    
+    if (enableLogging) {
+      loggingService.setEnabled(enableLogging);
+      loggingService.setMinLevel(logLevel);
+      loggingService.setMaxLogs(maxLogs);
+      loggingService.setEnabledCategories(enabledLogCategories);
+    } else {
+      loggingService.setEnabled(false);
+    }
     
     this._showToast('设置已保存');
   }
