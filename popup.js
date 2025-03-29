@@ -1,13 +1,22 @@
 let allResources = [];
 let selectedResources = new Set();
 let currentPreviewResource = null;
+let resourceStats = {
+  total: 0,
+  byType: {},
+  byQuality: {},
+  byDetectionMethod: {}
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   const filterImages = document.getElementById('filter-images');
   const filterVideos = document.getElementById('filter-videos');
+  const filterAudio = document.getElementById('filter-audio');
   const filterQuality = document.getElementById('filter-quality');
+  const filterDetectionMethod = document.getElementById('filter-detection-method');
   const sortBy = document.getElementById('sort-by');
   const refreshBtn = document.getElementById('refresh-btn');
+  const clearCacheBtn = document.getElementById('clear-cache-btn');
   const selectAll = document.getElementById('select-all');
   const downloadSelectedBtn = document.getElementById('download-selected-btn');
   const resourcesList = document.getElementById('resources-list');
@@ -38,6 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const queueCount = document.getElementById('queue-count');
   const closeProgressModal = document.getElementById('close-progress-modal');
   
+  const statsContainer = document.getElementById('resource-stats-container');
+  
   loadResources();
   loadDownloadHistory();
   loadSettings();
@@ -61,7 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
   
   filterImages.addEventListener('change', updateResourcesList);
   filterVideos.addEventListener('change', updateResourcesList);
+  if (filterAudio) {
+    filterAudio.addEventListener('change', updateResourcesList);
+  }
   filterQuality.addEventListener('change', updateResourcesList);
+  if (filterDetectionMethod) {
+    filterDetectionMethod.addEventListener('change', updateResourcesList);
+  }
   sortBy.addEventListener('change', updateResourcesList);
   
   refreshBtn.addEventListener('click', () => {
@@ -71,6 +88,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   });
+  
+  if (clearCacheBtn) {
+    clearCacheBtn.addEventListener('click', () => {
+      chrome.runtime.sendMessage({ action: 'clearResourceCache' }, () => {
+        loadResources();
+      });
+    });
+  }
   
   saveSettingsBtn.addEventListener('click', saveSettings);
   resetSettingsBtn.addEventListener('click', resetSettings);
@@ -143,13 +168,137 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+/**
+ * 加载资源列表
+ */
 function loadResources() {
   chrome.runtime.sendMessage({ action: 'getResources' }, (response) => {
     if (response && response.resources) {
       allResources = response.resources;
+      
+      calculateResourceStats(allResources);
+      
       updateResourcesList();
+      
+      updateResourceStats();
     }
   });
+}
+
+/**
+ * 计算资源统计信息
+ * @param {Array} resources - 资源列表
+ */
+function calculateResourceStats(resources) {
+  resourceStats = {
+    total: resources.length,
+    byType: {},
+    byQuality: {},
+    byDetectionMethod: {}
+  };
+  
+  resources.forEach(resource => {
+    const type = resource.type || 'unknown';
+    resourceStats.byType[type] = (resourceStats.byType[type] || 0) + 1;
+    
+    const quality = resource.quality || 'unknown';
+    resourceStats.byQuality[quality] = (resourceStats.byQuality[quality] || 0) + 1;
+    
+    const method = resource.detectionMethod || 'unknown';
+    resourceStats.byDetectionMethod[method] = (resourceStats.byDetectionMethod[method] || 0) + 1;
+  });
+}
+
+/**
+ * 更新资源统计显示
+ */
+function updateResourceStats() {
+  const statsContainer = document.getElementById('resource-stats-container');
+  if (!statsContainer) return;
+  
+  let statsHtml = `
+    <div class="stats-item">
+      <span class="stats-label">总资源:</span>
+      <span class="stats-value">${resourceStats.total}</span>
+    </div>
+  `;
+  
+  statsHtml += '<div class="stats-group"><span class="stats-group-title">资源类型</span>';
+  for (const [type, count] of Object.entries(resourceStats.byType)) {
+    statsHtml += `
+      <div class="stats-item">
+        <span class="stats-label">${getTypeLabel(type)}:</span>
+        <span class="stats-value">${count}</span>
+      </div>
+    `;
+  }
+  statsHtml += '</div>';
+  
+  if (Object.keys(resourceStats.byQuality).length > 1) {
+    statsHtml += '<div class="stats-group"><span class="stats-group-title">资源质量</span>';
+    for (const [quality, count] of Object.entries(resourceStats.byQuality)) {
+      if (quality !== 'unknown') {
+        statsHtml += `
+          <div class="stats-item">
+            <span class="stats-label">${quality}:</span>
+            <span class="stats-value">${count}</span>
+          </div>
+        `;
+      }
+    }
+    statsHtml += '</div>';
+  }
+  
+  if (Object.keys(resourceStats.byDetectionMethod).length > 1) {
+    statsHtml += '<div class="stats-group"><span class="stats-group-title">检测方法</span>';
+    for (const [method, count] of Object.entries(resourceStats.byDetectionMethod)) {
+      if (method !== 'unknown') {
+        statsHtml += `
+          <div class="stats-item">
+            <span class="stats-label">${getDetectionMethodLabel(method)}:</span>
+            <span class="stats-value">${count}</span>
+          </div>
+        `;
+      }
+    }
+    statsHtml += '</div>';
+  }
+  
+  statsContainer.innerHTML = statsHtml;
+}
+
+/**
+ * 获取资源类型标签
+ * @param {string} type - 资源类型
+ * @returns {string} - 用户友好的类型标签
+ */
+function getTypeLabel(type) {
+  const labels = {
+    'image': '图片',
+    'video': '视频',
+    'audio': '音频',
+    'unknown': '未知'
+  };
+  return labels[type] || type;
+}
+
+/**
+ * 获取检测方法标签
+ * @param {string} method - 检测方法
+ * @returns {string} - 用户友好的方法标签
+ */
+function getDetectionMethodLabel(method) {
+  const labels = {
+    'dom-standard': '标准DOM',
+    'css-background': 'CSS背景',
+    'custom-attribute': '自定义属性',
+    'network-request': '网络请求',
+    'streaming': '流媒体',
+    'shadow-dom': '影子DOM',
+    'iframe': '嵌入框架',
+    'unknown': '未知'
+  };
+  return labels[method] || method;
 }
 
 function loadDownloadHistory() {
@@ -322,46 +471,76 @@ function formatFileSize(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
+/**
+ * 更新资源列表
+ */
 function updateResourcesList() {
   const filterImages = document.getElementById('filter-images').checked;
   const filterVideos = document.getElementById('filter-videos').checked;
+  const filterAudio = document.getElementById('filter-audio')?.checked || false;
   const filterQuality = document.getElementById('filter-quality').value;
+  const filterDetectionMethod = document.getElementById('filter-detection-method')?.value || 'all';
   const sortBy = document.getElementById('sort-by').value;
   const resourcesList = document.getElementById('resources-list');
   const noResources = document.getElementById('no-resources');
   const resourceCount = document.getElementById('resource-count');
   
+  /**
+   * 生成视频缩略图
+   * @param {HTMLVideoElement} videoElement - 视频元素
+   */
   function generateVideoThumbnail(videoElement) {
     try {
-      videoElement.currentTime = 1.0; // Set to 1 second to avoid black frames at the beginning
+      videoElement.currentTime = 1.0; // 设置到1秒处以避免开头的黑屏
       videoElement.addEventListener('loadeddata', function() {
         videoElement.style.display = 'block';
       });
+      
+      videoElement.addEventListener('error', function() {
+        const parent = videoElement.parentElement;
+        if (parent) {
+          parent.innerHTML = '<div class="thumbnail-error">无法加载</div>';
+        }
+      });
     } catch (e) {
-      console.error('Error generating video thumbnail:', e);
+      console.error('生成视频缩略图错误:', e);
     }
   }
   
   let filteredResources = allResources.filter(resource => {
     if (resource.type === 'image' && filterImages) return true;
     if (resource.type === 'video' && filterVideos) return true;
+    if (resource.type === 'audio' && filterAudio) return true;
     return false;
   });
   
   if (filterQuality !== 'all') {
-    filteredResources = filteredResources.filter(resource => resource.quality === filterQuality);
+    filteredResources = filteredResources.filter(resource => 
+      resource.quality === filterQuality || 
+      resource.possibleQuality === filterQuality
+    );
+  }
+  
+  if (filterDetectionMethod !== 'all') {
+    filteredResources = filteredResources.filter(resource => 
+      resource.detectionMethod === filterDetectionMethod
+    );
   }
   
   filteredResources.sort((a, b) => {
     switch (sortBy) {
       case 'size-desc':
-        return b.size - a.size;
+        return (b.size || 0) - (a.size || 0);
       case 'size-asc':
-        return a.size - b.size;
+        return (a.size || 0) - (b.size || 0);
       case 'time-desc':
-        return b.timestamp - a.timestamp;
+        return (b.timestamp || 0) - (a.timestamp || 0);
       case 'time-asc':
-        return a.timestamp - b.timestamp;
+        return (a.timestamp || 0) - (b.timestamp || 0);
+      case 'quality-desc':
+        return getQualityValue(b) - getQualityValue(a);
+      case 'quality-asc':
+        return getQualityValue(a) - getQualityValue(b);
       default:
         return 0;
     }
@@ -382,8 +561,8 @@ function updateResourcesList() {
       
       let thumbnailHtml = '';
       if (resource.type === 'image') {
-        thumbnailHtml = `<img src="${resource.url}" class="thumbnail" alt="Thumbnail" data-url="${resource.url}">`;
-      } else {
+        thumbnailHtml = `<img src="${resource.url}" class="thumbnail" alt="Thumbnail" data-url="${resource.url}" loading="lazy">`;
+      } else if (resource.type === 'video') {
         const posterAttr = resource.thumbnailUrl ? `poster="${resource.thumbnailUrl}"` : '';
         thumbnailHtml = `<div class="video-thumbnail" data-url="${resource.url}">
           <video width="50" height="50" preload="metadata" ${posterAttr} style="object-fit: cover;">
@@ -391,6 +570,21 @@ function updateResourcesList() {
           </video>
           <div class="play-icon">▶</div>
         </div>`;
+      } else if (resource.type === 'audio') {
+        thumbnailHtml = `<div class="audio-thumbnail" data-url="${resource.url}">
+          <div class="audio-icon">♪</div>
+        </div>`;
+      }
+      
+      let badgesHtml = '';
+      if (resource.quality && resource.quality !== 'unknown') {
+        badgesHtml += `<span class="quality-badge ${resource.quality.toLowerCase()}">${resource.quality}</span>`;
+      } else if (resource.possibleQuality && resource.possibleQuality !== 'unknown') {
+        badgesHtml += `<span class="quality-badge ${resource.possibleQuality.toLowerCase()}">${resource.possibleQuality}</span>`;
+      }
+      
+      if (resource.detectionMethod && resource.detectionMethod !== 'unknown') {
+        badgesHtml += `<span class="detection-badge ${resource.detectionMethod}">${getDetectionMethodLabel(resource.detectionMethod)}</span>`;
       }
       
       resourceItem.innerHTML = `
@@ -401,8 +595,11 @@ function updateResourcesList() {
         <div class="resource-info">
           <div class="resource-name">${resource.filename}</div>
           <div class="resource-details">
-            <span class="resource-type">${resource.contentType}</span>
-            <span class="resource-size">${resource.sizeFormatted}</span>
+            <span class="resource-type">${resource.contentType || getTypeLabel(resource.type)}</span>
+            <span class="resource-size">${resource.sizeFormatted || '未知大小'}</span>
+          </div>
+          <div class="resource-badges">
+            ${badgesHtml}
           </div>
         </div>
         <div class="resource-actions">
@@ -438,7 +635,7 @@ function updateResourcesList() {
         openPreviewModal(resource);
       });
       
-      const thumbnail = resourceItem.querySelector('.thumbnail, .video-thumbnail');
+      const thumbnail = resourceItem.querySelector('.thumbnail, .video-thumbnail, .audio-thumbnail');
       if (thumbnail) {
         thumbnail.addEventListener('click', () => {
           openPreviewModal(resource);
@@ -459,6 +656,22 @@ function updateResourcesList() {
   updateSelectAllCheckbox();
   
   updateDownloadButton();
+}
+
+/**
+ * 获取质量值用于排序
+ * @param {Object} resource - 资源对象
+ * @returns {number} - 质量值
+ */
+function getQualityValue(resource) {
+  const quality = resource.quality || resource.possibleQuality || 'unknown';
+  const qualityValues = {
+    'HD': 3,
+    'SD': 2,
+    'LD': 1,
+    'unknown': 0
+  };
+  return qualityValues[quality] || 0;
 }
 
 function updateSelectAllCheckbox() {
