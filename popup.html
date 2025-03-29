@@ -35,6 +35,25 @@
       <button id="refresh-btn">刷新</button>
     </div>
     
+    <div class="download-settings">
+      <div class="download-path">
+        <label>下载路径: 
+          <input type="text" id="download-path" placeholder="downloads/resource-sniffer">
+        </label>
+      </div>
+      <div class="filename-template">
+        <label>文件名格式: 
+          <select id="filename-format">
+            <option value="original">原始文件名</option>
+            <option value="type-timestamp">[类型]-[时间戳]</option>
+            <option value="site-type-index">[网站]-[类型]-[序号]</option>
+            <option value="custom">自定义</option>
+          </select>
+        </label>
+        <input type="text" id="custom-filename-format" placeholder="{site}-{type}-{index}" style="display: none;">
+      </div>
+    </div>
+    
     <div class="resources-container">
       <div class="resources-header">
         <div class="select-all">
@@ -54,6 +73,20 @@
       
       <div id="no-resources" style="display: none;">
         <p>未检测到资源。请刷新页面或浏览其他内容。</p>
+      </div>
+    </div>
+    
+    <div id="preview-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>资源预览</h2>
+        <div id="preview-container"></div>
+        <div class="preview-info">
+          <div id="preview-filename"></div>
+          <div id="preview-type"></div>
+          <div id="preview-size"></div>
+        </div>
+        <button id="preview-download-btn">下载</button>
       </div>
     </div>
     
