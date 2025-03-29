@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Analysis Enhancements Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      color: #1a73e8;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .test-controls {
+      margin-bottom: 15px;
+    }
+    .test-results {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      max-height: 300px;
+      overflow: auto;
+    }
+    button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #0d47a1;
+    }
+    .resource-item {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .resource-preview {
+      max-width: 200px;
+      max-height: 150px;
+      margin-top: 10px;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Content Analysis Enhancements Test</h1>
+  <p>This page tests the enhanced content analysis features of the Resource Sniffer extension.</p>
+  
+  <div class="test-section">
+    <h2>1. Deep Learning Model Test</h2>
+    <div class="test-controls">
+      <button id="test-ml-model">Test ML Model</button>
+    </div>
+    <div id="ml-results" class="test-results">Results will appear here...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>2. Resource Fingerprinting Test</h2>
+    <div class="test-controls">
+      <button id="test-fingerprinting">Test Fingerprinting</button>
+    </div>
+    <div id="fingerprint-results" class="test-results">Results will appear here...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>3. Metadata Analysis Test</h2>
+    <div class="test-controls">
+      <button id="test-metadata">Test Metadata Analysis</button>
+    </div>
+    <div id="metadata-results" class="test-results">Results will appear here...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>4. Resource Detection Test</h2>
+    <div class="test-controls">
+      <button id="detect-resources">Detect Resources</button>
+    </div>
+    <div id="detection-results" class="test-results">Results will appear here...</div>
+    <div id="resources-container"></div>
+  </div>
+  
+  <!-- Test Resources -->
+  <div style="display: none;">
+    <img src="https://picsum.photos/id/237/800/600" alt="Test Image 1" id="test-image-1">
+    <img src="https://picsum.photos/id/237/400/300" alt="Test Image 1 Thumbnail" id="test-image-1-thumb">
+    <img src="https://picsum.photos/id/1015/800/600" alt="Test Image 2" id="test-image-2">
+    <video id="test-video-1" width="320" height="240" controls>
+      <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    </video>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Test ML Model
+      document.getElementById('test-ml-model').addEventListener('click', function() {
+        const resultsElement = document.getElementById('ml-results');
+        resultsElement.textContent = 'Testing ML model...';
+        
+        const testResources = [
+          {
+            url: 'https://picsum.photos/id/237/800/600',
+            type: 'image',
+            width: 800,
+            height: 600
+          },
+          {
+            url: 'https://www.w3schools.com/html/mov_bbb.mp4',
+            type: 'video',
+            width: 320,
+            height: 240
+          }
+        ];
+        
+        chrome.runtime.sendMessage({
+          action: 'testMLModel',
+          resources: testResources
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">ML Model Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">ML Model Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+      
+      // Test Fingerprinting
+      document.getElementById('test-fingerprinting').addEventListener('click', function() {
+        const resultsElement = document.getElementById('fingerprint-results');
+        resultsElement.textContent = 'Testing fingerprinting...';
+        
+        const testResources = [
+          {
+            url: 'https://picsum.photos/id/237/800/600',
+            type: 'image'
+          },
+          {
+            url: 'https://picsum.photos/id/237/400/300',
+            type: 'image'
+          },
+          {
+            url: 'https://picsum.photos/id/1015/800/600',
+            type: 'image'
+          }
+        ];
+        
+        chrome.runtime.sendMessage({
+          action: 'testFingerprinting',
+          resources: testResources
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Fingerprinting Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">Fingerprinting Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+      
+      // Test Metadata Analysis
+      document.getElementById('test-metadata').addEventListener('click', function() {
+        const resultsElement = document.getElementById('metadata-results');
+        resultsElement.textContent = 'Testing metadata analysis...';
+        
+        const testResources = [
+          {
+            url: 'https://picsum.photos/id/237/800/600',
+            type: 'image',
+            width: 800,
+            height: 600
+          },
+          {
+            url: 'https://www.w3schools.com/html/mov_bbb.mp4',
+            type: 'video',
+            width: 320,
+            height: 240
+          }
+        ];
+        
+        chrome.runtime.sendMessage({
+          action: 'testMetadataAnalysis',
+          resources: testResources
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            resultsElement.innerHTML = `<span class="success">Metadata Analysis Test Successful!</span>\n\n${JSON.stringify(response.results, null, 2)}`;
+          } else {
+            resultsElement.innerHTML = `<span class="error">Metadata Analysis Test Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+      
+      // Detect Resources
+      document.getElementById('detect-resources').addEventListener('click', function() {
+        const resultsElement = document.getElementById('detection-results');
+        const resourcesContainer = document.getElementById('resources-container');
+        
+        resultsElement.textContent = 'Detecting resources...';
+        resourcesContainer.innerHTML = '';
+        
+        chrome.runtime.sendMessage({
+          action: 'detectResources'
+        }, function(response) {
+          if (chrome.runtime.lastError) {
+            resultsElement.innerHTML = `<span class="error">Error: ${chrome.runtime.lastError.message}</span>`;
+            return;
+          }
+          
+          if (response && response.success) {
+            const resources = response.resources || [];
+            
+            resultsElement.innerHTML = `<span class="success">Detected ${resources.length} resources!</span>`;
+            
+            resources.forEach(resource => {
+              const resourceElement = document.createElement('div');
+              resourceElement.className = 'resource-item';
+              
+              let previewHtml = '';
+              if (resource.type === 'image') {
+                previewHtml = `<img src="${resource.url}" class="resource-preview" alt="Resource Preview">`;
+              } else if (resource.type === 'video') {
+                previewHtml = `<video src="${resource.url}" class="resource-preview" controls></video>`;
+              }
+              
+              resourceElement.innerHTML = `
+                <div><strong>URL:</strong> ${resource.url}</div>
+                <div><strong>Type:</strong> ${resource.type}</div>
+                <div><strong>Size:</strong> ${resource.sizeFormatted || 'Unknown'}</div>
+                <div><strong>Quality:</strong> ${resource.quality || 'Unknown'}</div>
+                <div><strong>Fingerprint:</strong> ${resource.fingerprint || 'N/A'}</div>
+                <div><strong>ML Category:</strong> ${resource.mlCategory || 'N/A'}</div>
+                <div><strong>ML Confidence:</strong> ${resource.mlConfidence ? (resource.mlConfidence * 100).toFixed(2) + '%' : 'N/A'}</div>
+                ${previewHtml}
+              `;
+              
+              resourcesContainer.appendChild(resourceElement);
+            });
+          } else {
+            resultsElement.innerHTML = `<span class="error">Resource Detection Failed</span>\n\n${JSON.stringify(response, null, 2)}`;
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
