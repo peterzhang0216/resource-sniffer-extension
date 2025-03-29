@@ -18,13 +18,20 @@ module.exports = {
   coverageDirectory: 'coverage',
   
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '../../src/services/indexeddb-service': '<rootDir>/mock-modules.js',
+    '../../src/utils/compression-utils': '<rootDir>/mock-modules.js',
+    '../../src/services/remote-logging-service': '<rootDir>/mock-modules.js',
+    '../../src/services/log-analyzer-service': '<rootDir>/mock-modules.js',
+    '../../src/components/log-viewer': '<rootDir>/mock-modules.js',
+    '../../src/components/log-tab': '<rootDir>/mock-modules.js',
+    '../../src/libs/chart.min.js': '<rootDir>/mock-modules.js'
   },
   
   testTimeout: 10000,
   
   setupFilesAfterEnv: [
-    '<rootDir>/test/unit/setup.js'
+    '<rootDir>/setup.js'
   ],
   
   transform: {
